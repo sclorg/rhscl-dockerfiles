@@ -4,10 +4,6 @@ RUN yum update -y && yum clean all
 RUN yum install yum-utils -y && yum clean all
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms
 RUN yum-config-manager --enable rhel-7-server-optional-rpms
-RUN yum install -y --setopt=tsflags=nodocs httpd24 php55 php55-php && yum clean all
+RUN yum install -y --setopt=tsflags=nodocs ruby200 && yum clean all
 
-EXPOSE 80
-
-EXPOSE 443
-
-ADD ./enablehttpd24.sh /etc/profile.d/
+ADD ./enableruby200.sh /etc/profile.d/

@@ -1,4 +1,4 @@
-Software Collection httpd24 perl516 --exclude perl516-perl-DBD-Pg-tests Dockerfile
+Software Collection httpd24 perl516 perl516-mod_perl Dockerfile
 ===============
 
 Build
@@ -7,4 +7,4 @@ To build this docker file you will require Red Hat enterprise linux 7 host syste
 
 Run
 -----
-docker run -t -i httpd24 perl516 --exclude perl516-perl-DBD-Pg-tests /bin/bash
+docker run -t -i httpd24 perl516 perl516-mod_perl /bin/bash
