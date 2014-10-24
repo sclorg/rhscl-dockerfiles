@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 -----
 
-docker run -t -i ruby200 ror40 /bin/bash
+docker run -t -i ror40 /bin/bash

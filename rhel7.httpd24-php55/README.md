@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 -----
 
-docker run -t -i httpd24 php55 php55-php /bin/bash
+docker run -t -i httpd24 /bin/bash

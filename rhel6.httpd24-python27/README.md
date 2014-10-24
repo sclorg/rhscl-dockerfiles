@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 -----
 
-docker run -t -i httpd24 python27 /bin/bash
+docker run -t -i httpd24 /bin/bash

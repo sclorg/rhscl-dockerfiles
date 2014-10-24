@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 -----
 
-docker run -t -i httpd24 perl516 perl516-mod_perl /bin/bash
+docker run -t -i httpd24 /bin/bash
