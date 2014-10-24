@@ -1,10 +1,13 @@
-Software Collection httpd24 php55 php55-php Dockerfile
-===============
+Software Collection httpd24 Dockerfile
+===================
 
 Build
 -----
-To build this docker file you will require Red Hat enterprise linux 7 host system with Software Collections
+
+Building this Dockerfile requires a Red Hat Enterprise Linux 7 host
+system with Software Collections entitlements available.
 
 Run
 -----
+
 docker run -t -i httpd24 php55 php55-php /bin/bash

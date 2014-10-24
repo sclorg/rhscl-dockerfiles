@@ -1,10 +1,13 @@
-Software Collection ruby200 ror40 Dockerfile
-===============
+Software Collection ror40 Dockerfile
+===================
 
 Build
 -----
-To build this docker file you will require Red Hat enterprise linux 7 host system with Software Collections
+
+Building this Dockerfile requires a Red Hat Enterprise Linux 7 host
+system with Software Collections entitlements available.
 
 Run
 -----
+
 docker run -t -i ruby200 ror40 /bin/bash
