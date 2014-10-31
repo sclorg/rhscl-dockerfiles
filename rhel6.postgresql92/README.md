@@ -1,5 +1,5 @@
 Software Collection postgresql92 Dockerfile
-===================
+===========================================
 
 Build
 -----

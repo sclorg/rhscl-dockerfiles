@@ -1,5 +1,5 @@
 Software Collection httpd24 Dockerfile
-===================
+======================================
 
 Build
 -----

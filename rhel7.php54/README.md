@@ -1,5 +1,5 @@
 Software Collection php54 Dockerfile
-===================
+====================================
 
 Build
 -----

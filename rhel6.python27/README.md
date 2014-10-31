@@ -1,5 +1,5 @@
 Software Collection python27 Dockerfile
-===================
+=======================================
 
 Build
 -----

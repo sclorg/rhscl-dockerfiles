@@ -1,5 +1,5 @@
 Software Collection php55 Dockerfile
-===================
+====================================
 
 Build
 -----
