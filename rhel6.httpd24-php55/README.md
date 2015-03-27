@@ -1,5 +1,5 @@
-Software Collection httpd24 Dockerfile
-======================================
+Software Collection httpd24-php55 Dockerfile
+============================================
 
 Build
 -----
@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 ---
 
-docker run -t -i httpd24 /bin/bash -l
+docker run -t -i httpd24-php55 /bin/bash -l

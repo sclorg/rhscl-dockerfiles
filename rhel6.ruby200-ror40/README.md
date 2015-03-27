@@ -1,5 +1,5 @@
-Software Collection ror40 Dockerfile
-====================================
+Software Collection ruby200-ror40 Dockerfile
+============================================
 
 Build
 -----
@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 ---
 
-docker run -t -i ror40 /bin/bash -l
+docker run -t -i ruby200-ror40 /bin/bash -l

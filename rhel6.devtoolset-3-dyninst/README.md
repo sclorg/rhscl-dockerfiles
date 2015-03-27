@@ -1,5 +1,5 @@
-Software Collection devtoolset-3 Dockerfile
-===========================================
+Software Collection devtoolset-3-dyninst Dockerfile
+===================================================
 
 Build
 -----
@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 ---
 
-docker run -t -i devtoolset-3 /bin/bash -l
+docker run -t -i devtoolset-3-dyninst /bin/bash -l
