@@ -10,4 +10,4 @@ system with Software Collections entitlements available.
 Run
 ---
 
-docker run -t -i devtoolset-3-systemtap /bin/bash -l
+docker run -t -i  --privileged devtoolset-3-systemtap /bin/bash -l
