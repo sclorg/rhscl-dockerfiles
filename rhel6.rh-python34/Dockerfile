@@ -7,9 +7,10 @@ RUN yum update -y && yum install -y yum-utils && \
     yum-config-manager --enable rhel-6-server-optional-rpms && \
     yum clean all
 
-RUN yum install -y --setopt=tsflags=nodocs rh-python34 && yum clean all
+RUN yum install -y --setopt=tsflags=nodocs rh-python34 rh-python34-python-devel rh-python34-python-setuptools && yum clean all
 
 
+EXPOSE 8000
 
 ENV BASH_ENV        /etc/profile.d/cont-env.sh
 

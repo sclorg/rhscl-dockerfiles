@@ -19,7 +19,7 @@ function mongo_create_users() {
     fi
 
     # Create user for database
-    if [ -n "${MONGODB_USER}" -o -n "${MONGODB_PASSWORD}"]; then
+    if [ -n "${MONGODB_USER}" -o -n "${MONGODB_PASSWORD}" ]; then
         
         if [ -z "${MONGODB_USER}" ]; then
             echo "=> MONGODB_USER is not set. Failed to create MongoDB user: ${MONGODB_USER}"
@@ -47,8 +47,11 @@ function mongo_create_users() {
 }
 
 if [ -n "${MONGODB_USER}" -o -n "${MONGODB_PASSWORD}" -o -n "${MONGODB_ADMIN_PASSWORD}" ]; then
+    # Create users
     mongo_create_users
+fi
 
+if [ -n "${MONGODB_ADMIN_PASSWORD}" -o "${MONGODB_AUTH}" = "true" ]; then
     # Enable auth
-    mongo_common_args+="--auth "
+    mongod_common_args+="--auth "
 fi

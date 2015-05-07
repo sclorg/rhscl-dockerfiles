@@ -9,7 +9,7 @@ function mongo_create_users() {
     # Set admin password
     #echo "=> Creating MongoDB admin user with password: ${MONGODB_ADMIN_PASSWORD}"
     set +e
-    mongo admin --eval "db.addUser({user: 'admin', pwd: '${MONGODB_ADMIN_PASSWORD}', roles: ['dbAdminAnyDatabase', 'userAdminAnyDatabase' , 'readWriteAnyDatabase','clusterAdmin' ]});"
+    mongo admin --eval "db.createUser({user: 'admin', pwd: '${MONGODB_ADMIN_PASSWORD}', roles: ['dbAdminAnyDatabase', 'userAdminAnyDatabase' , 'readWriteAnyDatabase','clusterAdmin' ]});"
     result=$?
     set -e
 
@@ -19,7 +19,7 @@ function mongo_create_users() {
     fi
 
     # Create user for database
-    if [ -n "${MONGODB_USER}" -o -n "${MONGODB_PASSWORD}"]; then
+    if [ -n "${MONGODB_USER}" -o -n "${MONGODB_PASSWORD}" ]; then
         
         if [ -z "${MONGODB_USER}" ]; then
             echo "=> MONGODB_USER is not set. Failed to create MongoDB user: ${MONGODB_USER}"
@@ -35,7 +35,7 @@ function mongo_create_users() {
         fi
         #echo "=> Creating a ${MONGODB_USER} user in MongoDB with password: ${MONGODB_PASSWORD}"
         set +e
-        mongo ${MONGODB_DATABASE} --eval "db.addUser({user: '${MONGODB_USER}', pwd: '${MONGODB_PASSWORD}', roles: [ 'readWrite' ]});"
+        mongo ${MONGODB_DATABASE} --eval "db.createUser({user: '${MONGODB_USER}', pwd: '${MONGODB_PASSWORD}', roles: [ 'readWrite' ]});"
         result=$?
         set -e
 
@@ -47,8 +47,11 @@ function mongo_create_users() {
 }
 
 if [ -n "${MONGODB_USER}" -o -n "${MONGODB_PASSWORD}" -o -n "${MONGODB_ADMIN_PASSWORD}" ]; then
+    # Create users
     mongo_create_users
+fi
 
+if [ -n "${MONGODB_ADMIN_PASSWORD}" -o "${MONGODB_AUTH}" = "true" ]; then
     # Enable auth
-    mongo_common_args+="--auth "
+    mongod_common_args+="--auth "
 fi

@@ -7,7 +7,7 @@ RUN yum update -y && yum install -y yum-utils && \
     yum-config-manager --enable rhel-6-server-optional-rpms && \
     yum clean all
 
-RUN yum install -y --setopt=tsflags=nodocs rh-mongodb26 && yum clean all
+RUN yum install -y --setopt=tsflags=nodocs rh-mongodb26 rh-mongodb26-mongodb && yum clean all
 
 
 EXPOSE 27017
@@ -21,12 +21,15 @@ ADD ./cont-env.sh /etc/profile.d/cont-env.sh
 ADD ./functions.sh /usr/share/cont-layer/common/
 ADD ./enablerh-mongodb26.sh /usr/share/cont-layer/common/env.d/
 ADD ./.bashrc $HOME/.bashrc
-ADD ./cont-mongod-daemon /usr/bin/cont-mongod-daemon
+ADD ./cont-mongod /usr/bin/cont-mongod
+ADD ./cont-mongos /usr/bin/cont-mongos
 ADD ./mongod.conf /etc/mongod.conf
+ADD ./mongos.conf /etc/mongos.conf
 ADD ./init-users.sh /usr/share/cont-layer/mongodb/init.d/init-users.sh
+ADD ./base-functions.sh /usr/share/cont-layer/mongodb/common/base-functions.sh
 
-RUN	mkdir -p /var/lib/mongodb/data && \
-	chown -R mongodb:mongodb /var/lib/mongodb/ && \
+RUN	mkdir -p /var/lib/mongodb/data /var/run/mongodb && \
+	chown -R mongodb:mongodb /var/lib/mongodb/ /var/run/mongodb /etc/mongod.conf /etc/mongos.conf && \
 	restorecon -R /var/lib/mongodb/ && \
 	:
 
@@ -34,6 +37,6 @@ USER mongodb
 
 VOLUME /var/lib/mongodb/data
 
-CMD ["cont-mongod-daemon"]
+CMD ["cont-mongod"]
 
 
