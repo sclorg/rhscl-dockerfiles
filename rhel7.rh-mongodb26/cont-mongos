@@ -43,7 +43,7 @@ port=${port:-27017}
 trap 'cleanup' SIGINT SIGTERM
 
 # Run scripts before mongod start
-cont_source_scripts mongodb pre-init
+cont_source_hooks pre-init.d mongodb
 
 # Add default config file
 mongos_common_args="-f $mongos_config_file "
@@ -54,7 +54,7 @@ mongos $mongos_common_args $mongo_local_args &
 wait_mongo "UP"
 
 # Run scripts with started mongod
-cont_source_scripts mongodb init
+cont_source_hooks init.d mongodb
 
 # Stop background MongoDB service to exec mongos
 set +e
@@ -71,7 +71,7 @@ if [ $status -ne 0 ]; then
 fi
 
 # Run scripts after mongod stoped
-cont_source_scripts mongodb post-init
+cont_source_hooks post-init.d mongodb
 
 # Start MongoDB service with enabled authentication
 exec mongos $mongos_common_args

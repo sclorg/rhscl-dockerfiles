@@ -10,12 +10,10 @@ RUN yum update -y && yum install -y yum-utils && \
 RUN yum install -y --setopt=tsflags=nodocs rh-java-common && yum clean all
 
 
-
 ENV BASH_ENV        /etc/profile.d/cont-env.sh
-
-ADD ./cont-env.sh /root/.bashrc
-ADD ./cont-env.sh /etc/profile.d/cont-env.sh
-ADD ./functions.sh /usr/share/cont-layer/common/
-ADD ./enablerh-java-common.sh /usr/share/cont-layer/common/env.d/
+ADD ./enablerh-java-common.sh /usr/share/cont-layer/common/env/enablerh-java-common.sh
+ADD ./usr /usr
+ADD ./etc /etc
+ADD ./root /root
 
 

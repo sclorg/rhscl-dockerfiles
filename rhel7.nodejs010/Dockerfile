@@ -1,21 +1,19 @@
-FROM rhel7
+FROM rhel7-local-test
 
 MAINTAINER docker@softwarecollections.org
 
-RUN yum update -y && yum install -y yum-utils && \
-    yum-config-manager --enable rhel-server-rhscl-7-rpms && \
-    yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum clean all
+#RUN yum update -y && yum install -y yum-utils && \
+#    yum-config-manager --enable rhel-server-rhscl-7-rpms && \
+#    yum-config-manager --enable rhel-7-server-optional-rpms && \
+#    yum clean all
 
 RUN yum install -y --setopt=tsflags=nodocs nodejs010 && yum clean all
 
 
 EXPOSE 80
-
 ENV BASH_ENV        /etc/profile.d/cont-env.sh
-
-ADD ./cont-env.sh /root/.bashrc
-ADD ./cont-env.sh /etc/profile.d/cont-env.sh
-ADD ./functions.sh /usr/share/cont-layer/common/
-ADD ./enablenodejs010.sh /usr/share/cont-layer/common/env.d/
+ADD ./enablenodejs010.sh /usr/share/cont-layer/common/env/enablenodejs010.sh
+ADD ./usr /usr
+ADD ./etc /etc
+ADD ./root /root
 
