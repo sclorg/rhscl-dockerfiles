@@ -1,13 +1,34 @@
 Software Collection ruby200 Dockerfile
 ======================================
 
-Build
------
+How to build this Dockerfile
+----------------------------
 
 Building this Dockerfile requires a Red Hat Enterprise Linux 7 host
 system with Software Collections entitlements available.
 
-Run
----
+To build the Dockerfile, run:
 
-docker run -t -i ruby200 /bin/bash -l
+```
+# cd ruby200
+# docker build -t=ruby200 .
+```
+
+General container help
+----------------------
+
+Run `docker run ruby200` to get this help.
+
+Run `docker run -ti ruby200 bash` to obtain interactive shell.
+
+Run `docker exec -ti CONTAINERID bash` to access already running container.
+
+You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
+info.
+
+
+Report bugs to <http://bugzilla.redhat.com>.
+
+
+
+

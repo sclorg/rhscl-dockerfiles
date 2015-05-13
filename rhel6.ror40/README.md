@@ -1,13 +1,34 @@
 Software Collection ror40 Dockerfile
 ====================================
 
-Build
------
+How to build this Dockerfile
+----------------------------
 
 Building this Dockerfile requires a Red Hat Enterprise Linux 7 host
 system with Software Collections entitlements available.
 
-Run
----
+To build the Dockerfile, run:
 
-docker run -t -i ror40 /bin/bash -l
+```
+# cd ror40
+# docker build -t=ror40 .
+```
+
+General container help
+----------------------
+
+Run `docker run ror40` to get this help.
+
+Run `docker run -ti ror40 bash` to obtain interactive shell.
+
+Run `docker exec -ti CONTAINERID bash` to access already running container.
+
+You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
+info.
+
+
+Report bugs to <http://bugzilla.redhat.com>.
+
+
+
+

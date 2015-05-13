@@ -1,0 +1,16 @@
+General container help
+----------------------
+
+Run `docker run rh-java-common` to get this help.
+
+Run `docker run -ti rh-java-common bash` to obtain interactive shell.
+
+Run `docker exec -ti CONTAINERID bash` to access already running container.
+
+You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
+info.
+
+
+Report bugs to <http://bugzilla.redhat.com>.
+
+

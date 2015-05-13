@@ -1,13 +1,34 @@
 Software Collection rh-java-common Dockerfile
 =============================================
 
-Build
------
+How to build this Dockerfile
+----------------------------
 
 Building this Dockerfile requires a Red Hat Enterprise Linux 7 host
 system with Software Collections entitlements available.
 
-Run
----
+To build the Dockerfile, run:
 
-docker run -t -i rh-java-common /bin/bash -l
+```
+# cd rh-java-common
+# docker build -t=rh-java-common .
+```
+
+General container help
+----------------------
+
+Run `docker run rh-java-common` to get this help.
+
+Run `docker run -ti rh-java-common bash` to obtain interactive shell.
+
+Run `docker exec -ti CONTAINERID bash` to access already running container.
+
+You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
+info.
+
+
+Report bugs to <http://bugzilla.redhat.com>.
+
+
+
+

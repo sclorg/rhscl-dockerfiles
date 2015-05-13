@@ -146,7 +146,7 @@ pgcont_check_external_storage()
 You plan to run the data directory '$pgdata' from container.  Please run the
 image like 'docker run -v YOUR_DIR:$pgdata'.  Or use the
 'assert_external_data = false' option in POSTGRESQL_CONTAINER_OPTS.  For more
-info see the 'cont-help' command output."
+info see the 'container-usage' command output."
 
     test -f "$pgdata/.container_internal" \
         && cont_error "$msg" \
