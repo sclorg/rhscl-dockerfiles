@@ -93,9 +93,9 @@ connections will still not require password.
 General container help
 ----------------------
 
-Run `docker run mysql55 container-usage` to get this help.
+Run `docker run THIS_IMAGE container-usage` to get this help.
 
-Run `docker run -ti mysql55 bash` to obtain interactive shell.
+Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
 
 Run `docker exec -ti CONTAINERID bash` to access already running container.
 

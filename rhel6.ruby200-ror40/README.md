@@ -17,9 +17,9 @@ To build the Dockerfile, run:
 General container help
 ----------------------
 
-Run `docker run ruby200-ror40` to get this help.
+Run `docker run THIS_IMAGE container-usage` to get this help.
 
-Run `docker run -ti ruby200-ror40 bash` to obtain interactive shell.
+Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
 
 Run `docker exec -ti CONTAINERID bash` to access already running container.
 

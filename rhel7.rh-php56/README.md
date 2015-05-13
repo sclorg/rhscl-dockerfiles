@@ -17,9 +17,9 @@ To build the Dockerfile, run:
 General container help
 ----------------------
 
-Run `docker run rh-php56` to get this help.
+Run `docker run THIS_IMAGE container-usage` to get this help.
 
-Run `docker run -ti rh-php56 bash` to obtain interactive shell.
+Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
 
 Run `docker exec -ti CONTAINERID bash` to access already running container.
 

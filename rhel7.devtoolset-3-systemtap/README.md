@@ -14,14 +14,35 @@ To build the Dockerfile, run:
 # docker build -t=devtoolset-3 .
 ```
 
+
+devtoolset-3-systemtap Docker Image based on devtoolset-3 Software Collection
+=============================================================================
+
+SystemTap is an instrumentation system for systems running Linux.
+Developers can write instrumentation scripts to collect data on
+the operation of the system.  The base systemtap package contains/requires
+the components needed to locally develop and execute systemtap scripts.
+
+
+Usage
+-----
+
+This container is expected to be run as privileged container:
+
+```
+docker run --privileged devtoolset-3-systemtap
+```
+
+
+
 General container help
 ----------------------
 
-Run `docker run  --privileged devtoolset-3-systemtap` to get this help.
+Run `docker run THIS_IMAGE container-usage` to get this help.
 
-Run `docker run -ti  --privileged devtoolset-3-systemtap bash` to obtain interactive shell.
+Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
 
-Run `docker exec -ti  --privileged CONTAINERID bash` to access already running container.
+Run `docker exec -ti CONTAINERID bash` to access already running container.
 
 You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
 info.

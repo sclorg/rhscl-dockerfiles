@@ -17,9 +17,9 @@ To build the Dockerfile, run:
 General container help
 ----------------------
 
-Run `docker run devtoolset-3-dyninst` to get this help.
+Run `docker run THIS_IMAGE container-usage` to get this help.
 
-Run `docker run -ti devtoolset-3-dyninst bash` to obtain interactive shell.
+Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
 
 Run `docker exec -ti CONTAINERID bash` to access already running container.
 
