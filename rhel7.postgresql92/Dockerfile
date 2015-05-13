@@ -28,7 +28,7 @@ USER postgres
 
 VOLUME ["/var/lib/pgsql/data"]
 
-ENTRYPOINT ["/usr/bin/cont-entry"]
+ENTRYPOINT ["/usr/bin/container-entrypoint"]
 
 CMD ["cont-postgresql-cmd"]
 

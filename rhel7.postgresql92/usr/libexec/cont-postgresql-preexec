@@ -37,7 +37,7 @@ test -f "$pidfile" \
         "seems like another PostgreSQL server uses DB data because" \
         "the file '$pidfile' already exists.  If you are" \
         "sure that the pidfile is leftover, use 'clear_pgdata_pidfile'" \
-        "option (see 'cont-help' for more info)" \
+        "option (see 'container-usage' for more info)" \
     && exit 1
 
 # Run the checking script here manually, usually placed in ExecStartPre=.
