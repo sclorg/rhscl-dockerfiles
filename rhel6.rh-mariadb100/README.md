@@ -49,36 +49,52 @@ You can also set following mount points by passing `-v /host:/container` flag to
 
 
 Usage
----------------------------------
+-----
 
 To just run the dameon and not store the database in a host directory,
 you need to execute the following command:
 
 ```
-# docker run --name=rh-mariadb100 -d -p 3306:3306 <THIS_IMAGE>
+# docker run -d -p 3306:3306 THIS_IMAGE
 ```
 
-If you want to set only environment variables to create a database and not store
-the database in a host directory, you need to execute the following command:
+This will run the daemon in default configuration and port 3306 will be
+exposed and mapped to host.
+
+It is recommended to use run the container with mounted data directory everytime.
+This example shows how to run the container with `/host/data` directory mounted
+and so the database will store data into this directory on host:
 
 ```
-# docker run -d --name mysql_database -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -p 3306:3306 <THIS_IMAGE>
+docker run -d -v /host/data:/var/lib/mysql/data THIS_IMAGE
 ```
 
-This will create a container named `mysql_database` running MySQL with database
-`db` and user with credentials `user:pass`. Port 3306 will be exposed and mapped
-to host.
+This will create a container running MariaDB 10.0 daemon
+and storing data into `/host/data` on the host.
 
-If you want your database to be persistent across container executions,
-also add a `-v /host/db/path:/var/lib/mysql/data` argument. This is going to be
-the MySQL data directory.
+For debugging purposes or just connecting to the running container, run
+`docker exec -ti CONTAINERID container-entrypoint` in a separate terminal.
+
+You can stop the detached container by running `docker stop CONTAINERID`.
+
+
+Database initialization
+-----------------------
 
 If the database directory is not initialized, the container script will first
 run [`mysql_install_db`](https://dev.mysql.com/doc/refman/5.5/en/mysql-install-db.html)
 during start and setup necessary database users and passwords. After the database is
 initialized, or if it was already present, `mysqld` is executed and will run as PID 1.
 
-You can stop the detached container by running `docker stop mysql_database`.
+To pass arguments that are used for initializing the database if it is not yet
+initialized, define them as environment variables
+
+```
+docker run -d -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db THIS_IMAGE
+```
+
+This will create a container running MariaDB 10.0 with database
+`db` and user with credentials `user:pass` that has access to the database `db`.
 
 
 MySQL root user
@@ -98,6 +114,10 @@ Run `docker run THIS_IMAGE container-usage` to get this help.
 Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
 
 Run `docker exec -ti CONTAINERID container-entrypoint` to access already running container.
+
+In order to get the container ID after running the image, pass `--cidfile=`
+option to the `docker run` command. That will instruct Docker to write
+a file with the container ID.
 
 You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
 info.

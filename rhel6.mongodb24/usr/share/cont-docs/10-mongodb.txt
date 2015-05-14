@@ -1,22 +1,5 @@
-Software Collection rh-mongodb26 Dockerfile
-===========================================
-
-How to build this Dockerfile
-----------------------------
-
-Building this Dockerfile requires a Red Hat Enterprise Linux 7 host
-system with Software Collections entitlements available.
-
-To build the Dockerfile, run:
-
-```
-# cd rh-mongodb26
-# docker build -t=rh-mongodb26 .
-```
-
-
-MongoDB 2.6 Docker Image based on rh-mongodb26 Software Collection
-==================================================================
+MongoDB 2.4 Docker Image based on mongodb24 Software Collection
+===============================================================
 
 Mongo (from "humongous") is a high-performance, open source, schema-free
 document-oriented database. MongoDB is written in C++ and offers the following
@@ -99,27 +82,4 @@ You can also set following mount points by passing `-v /host:/container` flag to
 |  Volume mount point      | Description            |
 | :----------------------- | ---------------------- |
 |  `/var/lib/mongodb/data` | MongoDB data directory |
-
-
-General container help
-----------------------
-
-Run `docker run THIS_IMAGE container-usage` to get this help.
-
-Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
-
-Run `docker exec -ti CONTAINERID container-entrypoint` to access already running container.
-
-In order to get the container ID after running the image, pass `--cidfile=`
-option to the `docker run` command. That will instruct Docker to write
-a file with the container ID.
-
-You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
-info.
-
-
-Report bugs to <http://bugzilla.redhat.com>.
-
-
-
 

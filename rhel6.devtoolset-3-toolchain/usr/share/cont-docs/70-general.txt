@@ -7,6 +7,10 @@ Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
 
 Run `docker exec -ti CONTAINERID container-entrypoint` to access already running container.
 
+In order to get the container ID after running the image, pass `--cidfile=`
+option to the `docker run` command. That will instruct Docker to write
+a file with the container ID.
+
 You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
 info.
 
