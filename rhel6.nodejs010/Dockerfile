@@ -17,3 +17,5 @@ ADD ./usr /usr
 ADD ./etc /etc
 ADD ./root /root
 
+CMD ["container-usage"]
+

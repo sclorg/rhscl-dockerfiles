@@ -1,13 +1,34 @@
 Software Collection rh-passenger40 Dockerfile
 =============================================
 
-Build
------
+How to build this Dockerfile
+----------------------------
 
 Building this Dockerfile requires a Red Hat Enterprise Linux 7 host
 system with Software Collections entitlements available.
 
-Run
----
+To build the Dockerfile, run:
 
-docker run -t -i rh-passenger40 /bin/bash -l
+```
+# cd rh-passenger40
+# docker build -t=rh-passenger40 .
+```
+
+General container help
+----------------------
+
+Run `docker run THIS_IMAGE container-usage` to get this help.
+
+Run `docker run -ti THIS_IMAGE bash` to obtain interactive shell.
+
+Run `docker exec -ti CONTAINERID container-entrypoint` to access already running container.
+
+You may try `-e CONT_DEBUG=VAL` with VAL up to 3 to get more verbose debugging
+info.
+
+
+Report bugs to <http://bugzilla.redhat.com>.
+
+
+
+
