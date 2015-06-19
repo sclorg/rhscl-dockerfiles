@@ -14,7 +14,7 @@ using docker on RHEL, see:
 - https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/7.0_Release_Notes/sect-Red_Hat_Enterprise_Linux-7.0_Release_Notes-Linux_Containers_with_Docker_Format-Using_Docker.html
 
 To build a container based on the Dockerfiles provided here, clone the
-github repositoy, then run, e.g:
+GitHub repository, then run, e.g:
 
   # docker build rhel6.httpd24
 
