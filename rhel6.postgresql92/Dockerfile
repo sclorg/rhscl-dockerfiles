@@ -1,19 +1,27 @@
-FROM rhel7
+FROM rhel6
 
 MAINTAINER docker@softwarecollections.org
 
-RUN yum update -y && yum install -y yum-utils && \
-    yum-config-manager --enable rhel-server-rhscl-7-rpms && \
-    yum-config-manager --enable rhel-7-server-optional-rpms && \
+RUN yum install -y --setopt=tsflags=nodocs yum-utils && \
+    yum-config-manager --enable rhel-server-rhscl-6-rpms && \
+    yum-config-manager --enable rhel-6-server-optional-rpms && \
     yum clean all
 
 RUN yum install -y --setopt=tsflags=nodocs postgresql92 && yum clean all
 
 
 EXPOSE 5432
-ENV HOME            /var/lib/pgsql
-ENV BASH_ENV        /etc/profile.d/cont-env.sh
-ADD ./.bashrc /var/lib/pgsql/.bashrc
+
+ENV	POSTGRESQL_VERSION=9.2 \
+	HOME=/var/lib/pgsql \
+	BASH_ENV=/etc/profile.d/cont-env.sh
+
+LABEL	openshift.io/tags="database,postgresql,postgresql92"  \
+	k8s.io/display-name="PostgreSQL 9.2"  \
+	openshift.io/expose-services="5432:postgresql"  \
+	k8s.io/description="PostgreSQL is an advanced Object-Relational database management system" 
+
+ADD ./.bashrc $HOME/.bashrc
 ADD ./usr /usr
 ADD ./var /var
 ADD ./cont-setup /usr/libexec/cont-setup
@@ -24,11 +32,12 @@ ADD ./root /root
 RUN	/usr/libexec/cont-setup && \
 	:
 
-USER postgres
+USER 26
 
 VOLUME ["/var/lib/pgsql/data"]
 
 ENTRYPOINT ["/usr/bin/container-entrypoint"]
 
 CMD ["cont-postgresql-cmd"]
+
 

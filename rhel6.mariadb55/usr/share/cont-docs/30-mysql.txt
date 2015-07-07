@@ -24,7 +24,21 @@ initialization, by passing `-e VAR=VALUE` to the Docker run command.
 |  `MYSQL_DATABASE`      | Database name                             |
 |  `MYSQL_ROOT_PASSWORD` | Password for the root user (optional)     |
 
-You can also set following mount points by passing `-v /host:/container` flag to docker.
+Either MYSQL_ROOT_PASSWORD or MYSQL_USER, MYSQL_PASSWORD and MYSQL_DATABASE
+must be specified.
+
+Following environment variables influence MySQL configuration file. They are all optional.
+
+|    Variable name                |    Description                                                    |    Default
+| :------------------------------ | ----------------------------------------------------------------- | -------------------------------
+|  `MYSQL_LOWER_CASE_TABLE_NAMES` | Sets how the table names are stored and compared                  |  0
+|  `MYSQL_MAX_CONNECTIONS`        | The maximum permitted number of simultaneous client connections   |  151
+|  `MYSQL_FT_MIN_WORD_LEN`        | The minimum length of the word to be included in a FULLTEXT index |  4
+|  `MYSQL_FT_MAX_WORD_LEN`        | The maximum length of the word to be included in a FULLTEXT index |  20
+|  `MYSQL_AIO`                    | Controls the `innodb_use_native_aio` setting value in case the native AIO is broken. See http://help.directadmin.com/item.php?id=529 |  1
+
+You can also set following mount points by passing `-v /host:/container` flag
+to docker.
 
 |  Volume mount point      | Description          |
 | :----------------------- | -------------------- |
@@ -38,7 +52,7 @@ To just run the dameon and not store the database in a host directory,
 you need to execute the following command:
 
 ```
-# docker run -d -p 3306:3306 THIS_IMAGE
+# docker run -d -e MYSQL_ROOT_PASSWORD=secret-password -p 3306:3306 THIS_IMAGE
 ```
 
 This will run the daemon in default configuration and port 3306 will be

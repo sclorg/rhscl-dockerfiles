@@ -2,7 +2,7 @@ FROM rhel7
 
 MAINTAINER docker@softwarecollections.org
 
-RUN yum update -y && yum install -y yum-utils && \
+RUN yum install -y --setopt=tsflags=nodocs yum-utils && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
     yum clean all
@@ -12,8 +12,16 @@ RUN yum install -y --setopt=tsflags=nodocs mongodb24 mongodb24-mongodb && yum cl
 
 EXPOSE 27017
 EXPOSE 28017
-ENV HOME            /var/lib/mongodb
-ENV BASH_ENV        /etc/profile.d/cont-env.sh
+
+ENV	MONGODB_VERSION=2.4 \
+	HOME=/var/lib/mongodb \
+	BASH_ENV=/etc/profile.d/cont-env.sh
+
+LABEL	openshift.io/tags="database,mongodb,mongodb24"  \
+	k8s.io/display-name="MongoDB 2.4"  \
+	openshift.io/expose-services="27017:mongodb"  \
+	k8s.io/description="MongoDB is a scalable, high-performance, open source NoSQL database." 
+
 ADD ./.bashrc $HOME/.bashrc
 ADD ./cont-mongod /usr/bin/cont-mongod
 ADD ./cont-mongos /usr/bin/cont-mongos
@@ -31,9 +39,11 @@ RUN	mkdir -p /var/lib/mongodb/data /var/run/mongodb && \
 	restorecon -R /var/lib/mongodb/ && \
 	:
 
-USER mongodb
+USER 184
 
 VOLUME /var/lib/mongodb/data
+
+ENTRYPOINT ["/usr/bin/container-entrypoint"]
 
 CMD ["cont-mongod"]
 

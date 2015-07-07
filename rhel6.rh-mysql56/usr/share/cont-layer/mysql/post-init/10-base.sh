@@ -1,5 +1,5 @@
 function mysql_usage() {
-	if [ $# == 2 ]; then
+	if [ $# == 1 ]; then
 		echo "error: $1"
 	fi
 	echo "You may optionally specify the following environment variables:"
@@ -12,6 +12,7 @@ function mysql_usage() {
 
 function mysql_initdb_base() {
 
+	[ -v MYSQL_DISABLE_CREATE_DB ] && return
 
 	mysqladmin $admin_flags -f drop test
 
@@ -37,6 +38,8 @@ function mysql_initdb_base() {
 
 		        echo "Initializing authentication for user $MYSQL_USER and database $MYSQL_DATABASE"
 
+			mysqladmin $admin_flags create "${MYSQL_DATABASE}"
+
 			mysql $mysql_flags <<EOSQL
 				CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
 				GRANT ALL ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%' ;
@@ -45,6 +48,8 @@ EOSQL
 		else
 			mysql_usage "All of MYSQL_USER, MYSQL_PASSWORD and MYSQL_DATABASE must be specified if any of it is."
 		fi
+	elif ! [ -v MYSQL_ROOT_PASSWORD ]; then
+		 mysql_usage "Either MYSQL_ROOT_PASSWORD or MYSQL_USER, MYSQL_PASSWORD and MYSQL_DATABASE must be specified."
 	fi
 }
 
