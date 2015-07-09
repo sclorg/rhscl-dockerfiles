@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# For SCL enablement
+source .bashrc
+
+set -e
+
+echo "---> Installing application source"
+cp -Rf /tmp/src/* ./
+
+echo "---> Building your Python application from source"
+if [ -f setup.py ]; then
+    python setup.py install --user
+elif [ -f requirements.txt ]; then
+    pip install --user -r requirements.txt
+fi
+
+# set permissions for any installed artifacts
+chmod -R og+rwx /opt/openshift
+
+# remove pip temporary directory
+pip_tmp=/tmp/pip_build_default
+if [ -d $pip_tmp ]; then
+    rm -rf $pip_tmp
+fi
