@@ -11,7 +11,7 @@ RUN yum install -y --setopt=tsflags=nodocs rh-passenger40 rh-passenger40-ruby22 
 
 
 
-ENV	BASH_ENV=/etc/profile.d/cont-env.sh
+ENV	BASH_ENV /etc/profile.d/cont-env.sh
 
 
 ADD ./enablerh-passenger40.sh /usr/share/cont-layer/common/env/enablerh-passenger40.sh
