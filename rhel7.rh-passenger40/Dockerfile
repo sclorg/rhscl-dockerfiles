@@ -7,7 +7,7 @@ RUN yum install -y --setopt=tsflags=nodocs yum-utils && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
     yum clean all
 
-RUN yum install -y --setopt=tsflags=nodocs rh-passenger40 rh-passenger40-ruby22 && yum clean all
+RUN yum install -y --setopt=tsflags=nodocs nginx16 rh-passenger40 rh-passenger40-ruby22 && yum clean all
 
 
 
