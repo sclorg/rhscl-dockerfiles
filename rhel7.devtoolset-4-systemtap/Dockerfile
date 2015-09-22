@@ -7,7 +7,7 @@ RUN yum install -y --setopt=tsflags=nodocs yum-utils && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
     yum clean all
 
-RUN yum install -y --setopt=tsflags=nodocs devtoolset-3-systemtap && yum clean all
+RUN yum install -y --setopt=tsflags=nodocs devtoolset-4-systemtap && yum clean all
 
 
 EXPOSE 5353
@@ -15,7 +15,7 @@ EXPOSE 5353
 ENV	BASH_ENV=/etc/profile.d/cont-env.sh
 
 
-ADD ./enabledevtoolset-3.sh /usr/share/cont-layer/common/env/enabledevtoolset-3.sh
+ADD ./enabledevtoolset-4.sh /usr/share/cont-layer/common/env/enabledevtoolset-4.sh
 ADD ./usr /usr
 ADD ./etc /etc
 ADD ./root /root

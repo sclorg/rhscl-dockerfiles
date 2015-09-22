@@ -1,4 +1,4 @@
-devtoolset-4-systemtap Docker Image based on devtoolset-3 Software Collection
+devtoolset-4-systemtap Docker Image based on devtoolset-4 Software Collection
 =============================================================================
 
 SystemTap is an instrumentation system for systems running Linux.

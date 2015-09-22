@@ -10,12 +10,12 @@ system with Software Collections entitlements available.
 To build the Dockerfile, run:
 
 ```
-# cd devtoolset-3
-# docker build -t=devtoolset-3 .
+# cd devtoolset-4
+# docker build -t=devtoolset-4 .
 ```
 
 
-devtoolset-4-systemtap Docker Image based on devtoolset-3 Software Collection
+devtoolset-4-systemtap Docker Image based on devtoolset-4 Software Collection
 =============================================================================
 
 SystemTap is an instrumentation system for systems running Linux.
