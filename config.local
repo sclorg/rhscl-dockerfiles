@@ -1,0 +1,6 @@
+# This is a list of directories that are maintained in this repository directly.
+# Re-generation cannot overwrite these directories.
+
+centos7.s2i-base
+rhel7.s2i-base
+
