@@ -33,6 +33,7 @@ strip_comments() {
 
 # checks whether image name lives here
 lives_here() {
+  [ -v REGENERATE_LOCALS ] && return 1
   grep -e "^[[:space:]]*$1[[:space:]]*\$" config.local
   return $?
 }
