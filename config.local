@@ -4,3 +4,15 @@
 centos7.s2i-base
 rhel7.s2i-base
 
+centos7.rh-passenger40
+rhel7.rh-passenger40
+
+centos7.rh-mariadb100
+rhel7.rh-mariadb100
+
+centos7.httpd24
+rhel7.httpd24
+
+centos7.nginx16
+rhel7.nginx16
+

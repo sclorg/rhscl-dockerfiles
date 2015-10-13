@@ -4,5 +4,51 @@
 #   url of the remote git repository
 #   path inside the remote repository
 
-centos7.rh-mysql56	https://github.com/openshift/mysql.git	5.6
-rhel7.rh-mysql56	https://github.com/openshift/mysql.git	5.6
+centos7.mysql55		https://github.com/openshift/mysql.git		5.5
+rhel7.mysql55		https://github.com/openshift/mysql.git		5.5
+
+centos7.rh-mysql56	https://github.com/openshift/mysql.git		5.6
+rhel7.rh-mysql56	https://github.com/openshift/mysql.git		5.6
+
+centos7.postgresql92	https://github.com/openshift/postgresql.git	9.2
+rhel7.postgresql92	https://github.com/openshift/postgresql.git	9.2
+
+centos7.rh-postgresql94	https://github.com/openshift/postgresql.git	9.4
+rhel7.rh-postgresql94	https://github.com/openshift/postgresql.git	9.4
+
+centos7.mongodb24	https://github.com/openshift/mongodb.git	2.4
+rhel7.mongodb24		https://github.com/openshift/mongodb.git	2.4
+
+centos7.rh-mongodb26	https://github.com/openshift/mongodb.git	2.6
+rhel7.rh-mongodb26	https://github.com/openshift/mongodb.git	2.6
+
+centos7.rh-python34	https://github.com/openshift/sti-python.git	3.4
+rhel7.rh-python34	https://github.com/openshift/sti-python.git	3.4
+
+centos7.python33	https://github.com/openshift/sti-python.git	3.3
+rhel7.python33		https://github.com/openshift/sti-python.git	3.3
+
+centos7.python27	https://github.com/openshift/sti-python.git	2.7
+rhel7.python27		https://github.com/openshift/sti-python.git	2.7
+
+centos7.perl516		https://github.com/openshift/sti-perl.git	5.16
+rhel7.perl516		https://github.com/openshift/sti-perl.git	5.16
+
+centos7.rh-perl520	https://github.com/openshift/sti-perl.git	5.20
+rhel7.rh-perl520	https://github.com/openshift/sti-perl.git	5.20
+
+centos7.ruby20		https://github.com/openshift/sti-ruby.git	2.0
+rhel7.ruby20		https://github.com/openshift/sti-ruby.git	2.0
+
+centos7.rh-ruby22	https://github.com/openshift/sti-ruby.git	2.2
+rhel7.rh-ruby22		https://github.com/openshift/sti-ruby.git	2.2
+
+centos7.nodejs010	https://github.com/openshift/sti-nodejs.git	0.10
+rhel7.nodejs010		https://github.com/openshift/sti-nodejs.git	0.10
+
+centos7.php55		https://github.com/openshift/sti-php.git	5.5
+rhel7.php55		https://github.com/openshift/sti-php.git	5.5
+
+centos7.rh-php56	https://github.com/openshift/sti-php.git	5.6
+rhel7.rh-php56		https://github.com/openshift/sti-php.git	5.6
+
