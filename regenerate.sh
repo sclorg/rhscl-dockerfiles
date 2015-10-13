@@ -93,8 +93,8 @@ refresh_remotes() {
     cp -r $workingdir/$path $image
 
     # some repositories contain more Dockerfiles in the repository, try to use the correct one
-    [[ $image =~ rhel7 ]] && [ -f $image/Dockerfile.rhel7 ] && mv -f $image/Dockerfile.rhel7 $image/Dockerfile
-    [[ $image =~ rhel6 ]] && [ -f $image/Dockerfile.rhel6 ] && mv -f $image/Dockerfile.rhel6 $image/Dockerfile
+    [[ $image =~ rhel7 ]] && [ -f $image/Dockerfile.rhel7 ] && [ ! -L $image/Dockerfile.rhel7 ] && mv -f $image/Dockerfile.rhel7 $image/Dockerfile
+    [[ $image =~ rhel6 ]] && [ -f $image/Dockerfile.rhel6 ] && [ ! -L $image/Dockerfile.rhel6 ] && mv -f $image/Dockerfile.rhel6 $image/Dockerfile
 
     # produce some sane info about where the image comes from
     echo "This image was pulled from $repo (subdirectory $path) at `date -u`." >$image/README.generation
