@@ -77,6 +77,7 @@ refresh_remotes() {
     image=$(echo "$entry" | awk '{print $1}')
     repo=$(echo "$entry" | awk '{print $2}')
     path=$(echo "$entry" | awk '{print $3}')
+    branch=$(echo "$entry" | awk '{print $4}')
     lives_here "$image" && continue
 
     # remove old content if exists
@@ -85,6 +86,7 @@ refresh_remotes() {
     # clone remote repo and copy content
     workingdir=$(mktemp -d /tmp/remote-repo-XXXXXX)
     git clone $repo $workingdir
+    [ -n "$branch" ] && git checkout "$branch"
     cp -r $workingdir/$path $image
 
     # some repositories contain more Dockerfiles in the repository, try to use the correct one
