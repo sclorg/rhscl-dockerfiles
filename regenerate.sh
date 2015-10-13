@@ -28,7 +28,7 @@ set -ex
 
 # removes comments and empty lines from a file
 strip_comments() {
-  cat $1 | sed -e 's:#.*$::g' -e '/^[[:space:]]*$/d'
+  cat $@ | sed -e 's:#.*$::g' -e '/^[[:space:]]*$/d'
 }
 
 # checks whether image name lives here
@@ -72,7 +72,7 @@ refresh_generated() {
 # 3. adds new content from the remote repository into this repository
 # It also renames Dockerfile.rhel{6,7} to Dockerfile
 refresh_remotes() {
-  strip_comments config.remote | while read entry ; do
+  strip_comments config.remote* | while read entry ; do
     # parse the entry
     image=$(echo "$entry" | awk '{print $1}')
     repo=$(echo "$entry" | awk '{print $2}')
