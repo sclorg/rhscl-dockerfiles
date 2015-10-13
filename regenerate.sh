@@ -87,7 +87,9 @@ refresh_remotes() {
     # clone remote repo and copy content
     workingdir=$(mktemp -d /tmp/remote-repo-XXXXXX)
     git clone $repo $workingdir
+    pushd "$workingdir"
     [ -n "$branch" ] && git checkout "$branch"
+    popd
     cp -r $workingdir/$path $image
 
     # some repositories contain more Dockerfiles in the repository, try to use the correct one
