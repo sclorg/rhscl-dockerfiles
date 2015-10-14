@@ -91,6 +91,7 @@ refresh_remotes() {
     [ -n "$branch" ] && git checkout "$branch"
     popd
     cp -r $workingdir/$path $image
+    rm -rf $image/.git
 
     # some repositories contain more Dockerfiles in the repository, try to use the correct one
     [[ $image =~ rhel7 ]] && [ -f $image/Dockerfile.rhel7 ] && [ ! -L $image/Dockerfile.rhel7 ] && mv -f $image/Dockerfile.rhel7 $image/Dockerfile
