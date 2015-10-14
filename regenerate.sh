@@ -113,4 +113,4 @@ refresh_generated
 
 refresh_remotes
 
-
+echo 'Done.'
