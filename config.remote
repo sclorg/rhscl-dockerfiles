@@ -4,6 +4,8 @@
 #   url of the remote git repository
 #   path inside the remote repository
 
+centos7.s2i-base	https://github.com/openshift/sti-base		.
+
 centos7.mysql55		https://github.com/openshift/mysql.git		5.5
 rhel7.mysql55		https://github.com/openshift/mysql.git		5.5
 
