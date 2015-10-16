@@ -35,7 +35,7 @@ container_ip() {
 }
 
 run_sti_build() {
-  sti build ${sti_args} file://${test_dir}/${1}-test-app ${IMAGE_NAME} ${IMAGE_NAME}-testapp
+  s2i build ${sti_args} file://${test_dir}/${1}-test-app ${IMAGE_NAME} ${IMAGE_NAME}-testapp
 }
 
 prepare() {
@@ -96,8 +96,8 @@ wait_for_cid() {
 }
 
 test_sti_usage() {
-  info "Testing 'sti usage'"
-  sti usage ${sti_args} ${IMAGE_NAME} &>/dev/null
+  info "Testing 's2i usage'"
+  s2i usage ${sti_args} ${IMAGE_NAME} &>/dev/null
 }
 
 test_docker_run_usage() {
@@ -179,7 +179,7 @@ for server in ${WEB_SERVERS[@]}; do
   run_sti_build ${server}
   check_result $?
 
-  # Verify the 'usage' script is working properly when running the base image with 'sti usage ...'
+  # Verify the 'usage' script is working properly when running the base image with 's2i usage ...'
   test_sti_usage
   check_result $?
 
