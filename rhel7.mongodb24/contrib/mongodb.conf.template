@@ -1,0 +1,21 @@
+# mongodb.conf
+
+port = 27017
+pidfilepath = ${MONGODB_PID_FILE}
+
+# Set this value to designate a directory for the mongod instance to store its data.
+# Default: /var/lib/mongodb/data
+dbpath = ${MONGODB_DATADIR}
+
+# Disable data file preallocation. Default: true
+noprealloc = ${MONGODB_NOPREALLOC}
+
+# Set MongoDB to use a smaller default data file size. Default: true
+smallfiles = ${MONGODB_SMALLFILES}
+
+# Runs MongoDB in a quiet mode that attempts to limit the amount of output.
+# Default: true
+quiet = ${MONGODB_QUIET}
+
+# Disable the HTTP interface (Defaults to localhost:28017).
+nohttpinterface = true
