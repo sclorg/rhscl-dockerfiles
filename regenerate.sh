@@ -24,7 +24,7 @@
 #   config.remote    -- list of images that have upstream elsewhere
 #   config.local     -- list of images that have upstream in this repository and are not generated
 
-set -ex
+set -e
 
 # removes comments and empty lines from a file
 strip_comments() {
@@ -107,6 +107,82 @@ refresh_remotes() {
   done
 }
 
+# lists tracked or untracked dockerfiles (depending on argument) that are in git:
+# * tracked: 0 = print tracked dockerfiles, 1 = print untracked dockerfiles
+show_tracked() {
+  print_tracked=${1-0}
+  list_tracked=$(mktemp /tmp/tracked-list-XXXXXX)
+  strip_comments config.generated config.local config.remote* | awk '{print $1}' >"$list_tracked"
+  git ls-files | grep -e "/" | sed -e 's|/.*||g' | sort | uniq | while read d ; do
+    grep -e "^[[:space:]]*${d}[[:space:]]*$" "$list_tracked" >/dev/null && r=0 || r=1
+    [ "$print_tracked" -eq $r ] && echo "$d"
+  done
+  rm -f "$list_tracked"
+}
+
+show_configured() {
+  strip_comments config.generated config.local config.remote* | awk '{print $1}'
+}
+
+show_missing() {
+  strip_comments config.generated config.local config.remote* | awk '{print $1}' | while read d ; do
+    [ -d "$d" ] || echo "$d"
+  done
+}
+
+usage() {
+  echo "Usage: `basename $0` [ -h|--help ] [ -t|--tracked ] [ -n|--not-tracked ]"
+  echo
+  echo "Without arguments it generates content of the repository based on config.* files and adds changes into git staging area."
+  echo
+  echo "Options:"
+  echo "  -h|--help             Print this help"
+  echo "  -t|--list-tracked     Print tracked Dockerfiles (either generated or hosting here)"
+  echo "  -n|--list-not-tracked Print non-tracked Dockerfiles (those that are not generated or hosting here)"
+  echo "  -c|--list-configured  Print configured Dockerfiles (either generated or hosting here)"
+  echo "  -m|--list-missing     Print configured but missing Dockerfiles"
+}
+
+while [ $# -ge 1 ] ; do
+  case $1 in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -t|--list-tracked)
+      show_tracked 0
+      exit 0
+      ;;
+    -n|--list-not-tracked)
+      show_tracked 1
+      exit 0
+      ;;
+    -c|--list-configured)
+      show_configured
+      exit 0
+      ;;
+    -m|--list-missing)
+      show_missing
+      exit 0
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+echo "This program regenerates content of this repository based on config.* files and adds the new files into git staging."
+while true; do
+    read -p "Do you want to proceed with regeneration? (yes/no): " yn
+    case $yn in
+        [Yy]* ) break ;;
+        [Nn]* ) exit ;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 echo "Refreshed content for the following images:" >clog
 
 refresh_generated
@@ -114,3 +190,4 @@ refresh_generated
 refresh_remotes
 
 echo 'Done.'
+
