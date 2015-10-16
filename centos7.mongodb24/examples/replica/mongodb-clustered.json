@@ -1,0 +1,166 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "mongodb-replica-example",
+    "annotations": {
+      "description": "MongoDB Replication Example",
+      "icon": "icon-database",
+      "tags": "database,mongodb,replication"
+    }
+  },
+  "labels": {
+    "template": "mongodb-replica-example"
+  },
+  "parameters": [
+    {
+      "name": "MONGODB_USER",
+      "description": "The username for MongoDB account to be created",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{3}"
+    },
+    {
+      "name": "MONGODB_PASSWORD",
+      "description": "Password for the MongoDB user account",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{12}"
+    },
+    {
+      "name": "MONGODB_DATABASE",
+      "description": "Name for the MongoDB database",
+      "value": "userdb"
+    },
+    {
+      "name": "MONGODB_ADMIN_PASSWORD",
+      "description": "Password for the MongoDB admin user",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{12}"
+    },
+    {
+      "name": "MONGODB_REPLICA_NAME",
+      "description": "The name of the replica set",
+      "value": "rs0"
+    },
+    {
+      "name": "MONGODB_SERVICE_NAME",
+      "description": "The name of the MongoDB Service (used to DNS lookup, default: 'mongodb')",
+      "value": "mongodb"
+    },
+    {
+      "name": "MONGODB_KEYFILE_VALUE",
+      "description": "The value of the MongoDB Key",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{255}"
+    }
+  ],
+  "objects":[
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${MONGODB_SERVICE_NAME}",
+        "labels": {
+          "name": "${MONGODB_SERVICE_NAME}"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "mongodb",
+            "port": 27017,
+            "targetPort": 27017
+          }
+        ],
+        "selector": {
+          "name": "mongodb-replica"
+        },
+        "clusterIP": "None"
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${MONGODB_SERVICE_NAME}",
+        "creationTimestamp": null
+      },
+      "spec": {
+        "strategy": {
+          "type": "Recreate",
+          "recreateParams": {
+            "post": {
+              "failurePolicy": "Retry",
+              "execNewPod": {
+                "command": [
+                  "run-mongod.sh", "initiate"
+                ],
+                "containerName": "mongodb"
+              }
+            }
+          }
+        },
+        "triggers": [
+          {
+            "type":"ConfigChange"
+          }
+        ],
+        "replicas": 3,
+        "selector": {
+          "name": "mongodb-replica"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "mongodb-replica"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name":  "mongodb",
+                "image": "openshift/mongodb-24-centos7",
+                "env": [
+                  {
+                    "name": "MONGODB_USER",
+                    "value": "${MONGODB_USER}"
+                  },
+                  {
+                    "name": "MONGODB_PASSWORD",
+                    "value": "${MONGODB_PASSWORD}"
+                  },
+                  {
+                    "name": "MONGODB_DATABASE",
+                    "value": "${MONGODB_DATABASE}"
+                  },
+                  {
+                    "name": "MONGODB_ADMIN_PASSWORD",
+                    "value": "${MONGODB_ADMIN_PASSWORD}"
+                  },
+                  {
+                    "name": "MONGODB_REPLICA_NAME",
+                    "value": "${MONGODB_REPLICA_NAME}"
+                  },
+                  {
+                    "name": "MONGODB_SERVICE_NAME",
+                    "value": "${MONGODB_SERVICE_NAME}"
+                  },
+                  {
+                    "name": "MONGODB_KEYFILE_VALUE",
+                    "value": "${MONGODB_KEYFILE_VALUE}"
+                  }
+                ],
+                "ports":[
+                  {
+                    "containerPort": 27017
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "restartPolicy": "Never",
+        "dnsPolicy": "ClusterFirst"
+      }
+    }
+  ]
+}

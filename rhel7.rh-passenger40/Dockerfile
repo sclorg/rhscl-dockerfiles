@@ -1,32 +1,46 @@
-FROM rhel7
+FROM openshift3/sti-base
 
-MAINTAINER docker@softwarecollections.org
+# This image provides a Passenger 4.0 environment you can use to run your Passenger
+# applications.
 
-RUN yum install -y --setopt=tsflags=nodocs yum-utils && \
-    yum-config-manager --enable rhel-server-rhscl-7-rpms && \
-    yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum clean all
+EXPOSE 8080
 
-RUN yum install -y --setopt=tsflags=nodocs rh-passenger40 rh-passenger40-ruby22 && yum clean all
+ENV PASSENGER_VERSION 4.0
 
+# Labels consumed by Red Hat build service
+LABEL BZComponent="rh-passenger40-docker" \
+      Name="rhscl/passenger-40-rhel7" \
+      Version="4.0" \
+      Release="26" \
+      Architecture="x86_64"
 
+RUN yum install -y --setopt=tsflags=nodocs rh-ruby22 rh-ruby22-ruby-devel rh-ruby22-rubygem-rake v8314 rh-ruby22-rubygem-bundler rh-ror41-rubygem-rack nodejs010 rh-passenger40-mod_passenger rh-passenger40-ruby22 httpd24 && \
+    yum clean all -y
 
-ENV	BASH_ENV=/etc/profile.d/cont-env.sh
+# Copy the STI scripts from the specific language image to /usr/local/sti
+COPY ./.sti/bin/ /usr/local/sti
 
+# Each language image can have 'contrib' a directory with extra files needed to
+# run and build the applications.
+COPY ./contrib/ /opt/app-root
+COPY ./contrib/ /opt/openshift
 
-ADD ./enablerh-passenger40.sh /usr/share/cont-layer/common/env/enablerh-passenger40.sh
-ADD ./usr /usr
-ADD ./etc /etc
-ADD ./root /root
+RUN chown -R 1001:1001 /opt/app-root
 
-ENV HOME /home/default
-RUN     groupadd -r default -f -g 1001 && \
-        useradd -u 1001 -r -g default -d ${HOME} -s /sbin/nologin \
-                        -c "Default Application User" default
+# In order to drop the root user, we have to make some directories world
+# writeable as OpenShift default "security" model is to run the container under
+# random UID.
+#    sed -ri ' s!^(\s*CustomLog)\s+\S+!\1 /proc/self/fd/1!g; s!^(\s*ErrorLog)\s+\S+!\1 /proc/self/fd/2!g;' /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
+RUN sed -i -f /opt/app-root/etc/httpdconf.sed /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
+    head -n151 /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf | tail -n1 | grep "AllowOverride All" || exit && \
+    mkdir /tmp/sessions && \
+    mkdir -p /opt/app-root/src/public && \
+    chmod -R og+rwx /opt/rh/httpd24/root/var/run/httpd && \
+    chmod -R og+rwx /var/run/rh-passenger40 && \
+    chown -R 1001:1001 /opt/app-root /tmp/sessions && \
+    cat /opt/app-root/etc/passenger.conf >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 
 USER 1001
 
-ENTRYPOINT ["/usr/bin/container-entrypoint"]
-
-CMD ["container-usage"]
-
+# Set the default CMD to print the usage of the language image
+CMD ["usage"]

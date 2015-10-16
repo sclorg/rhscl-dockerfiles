@@ -118,18 +118,18 @@ show_tracked() {
   git ls-files | grep -e "/" | sed -e 's|/.*||g' | sort | uniq | while read d ; do
     grep -e "^[[:space:]]*${d}[[:space:]]*$" "$list_tracked" >/dev/null && r=0 || r=1
     [ "$print_tracked" -eq $r ] && echo "$d"
-  done
+  done | sort
   rm -f "$list_tracked"
 }
 
 show_configured() {
-  strip_comments $CONFIG_GENERATED $CONFIG_LOCAL $CONFIG_REMOTE | awk '{print $1}'
+  strip_comments $CONFIG_GENERATED $CONFIG_LOCAL $CONFIG_REMOTE | awk '{print $1}' | sort
 }
 
 show_missing() {
   strip_comments $CONFIG_GENERATED $CONFIG_LOCAL $CONFIG_REMOTE | awk '{print $1}' | while read d ; do
     [ -d "$d" ] || echo "$d"
-  done
+  done | sort
 }
 
 usage() {
