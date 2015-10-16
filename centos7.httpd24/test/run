@@ -55,7 +55,7 @@ mkdir "$CIDFILE_DIR"
 
 overall=0
 
-run "docker pull $IMAGE_NAME" 0
+run "docker inspect $IMAGE_NAME >/dev/null || docker pull $IMAGE_NAME" 0
 
 # Check default page
 DOCKER_ARGS='-p 80:80'
