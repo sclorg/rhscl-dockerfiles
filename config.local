@@ -16,3 +16,23 @@ rhel7.httpd24
 centos7.nginx16
 rhel7.nginx16
 
+rhel7.rh-php56
+
+rhel7.rh-python34
+
+rhel7.python27
+
+rhel7.rh-perl520
+
+rhel7.rh-ruby22
+
+rhel7.nodejs010
+
+rhel7.rh-mongodb26
+
+rhel7.rh-mysql56
+
+rhel7.rh-postgresql94
+
+rhel7.rh-ror41
+
