@@ -1,32 +1,37 @@
 FROM centos:centos7
 
-MAINTAINER docker@softwarecollections.org
+# RHSCL nginx16 image.
+#
+# Volumes:
+#  * /opt/rh/nginx16/root/usr/share/nginx/html - Datastore for nginx
+#  * /var/log/nginx16 - Storage for logs when $NGINX_LOG_TO_VOLUME is set
+# Environment:
+#  * $NGINX_LOG_TO_VOLUME (optional) - When set, nginx will log into /var/log/nginx16
 
-RUN yum -y --setopt=tsflags=nodocs install https://www.softwarecollections.org/en/scls/rhscl/nginx16/epel-7-x86_64/download/rhscl-nginx16-epel-7-x86_64.noarch.rpm && \
-    yum clean all
-
-RUN yum install -y --setopt=tsflags=nodocs nginx16 && yum clean all
-
+MAINTAINER SoftwareCollections.org <sclorg@redhat.com>
 
 EXPOSE 80
 EXPOSE 443
 
-ENV	BASH_ENV=/etc/profile.d/cont-env.sh
+COPY run-*.sh /usr/local/bin/
+RUN mkdir -p /var/lib/nginx16
+COPY contrib /var/lib/nginx16/
+
+RUN rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+    yum -y --setopt=tsflags=nodocs install https://www.softwarecollections.org/en/scls/rhscl/nginx16/epel-7-x86_64/download/rhscl-nginx16-epel-7-x86_64.noarch.rpm && \
+    yum install -y --setopt=tsflags=nodocs gettext hostname bind-utils nginx16 nginx16-nginx && \
+    yum clean all
+
+# When bash is started non-interactively, to run a shell script, for example it
+# looks for this variable and source the content of this file. This will enable
+# the SCL for all scripts without need to do 'scl enable'.
+ENV BASH_ENV=/var/lib/nginx16/scl_enable \
+    ENV=/var/lib/nginx16/scl_enable \
+    PROMPT_COMMAND=". /var/lib/nginx16/scl_enable"
 
 
-ADD ./enablenginx16.sh /usr/share/cont-layer/common/env/enablenginx16.sh
-ADD ./usr /usr
-ADD ./etc /etc
-ADD ./root /root
+VOLUME ["/opt/rh/nginx16/root/usr/share/nginx/html"]
+VOLUME ["/var/log/nginx16"]
 
-ENV HOME /home/default
-RUN     groupadd -r default -f -g 1001 && \
-        useradd -u 1001 -r -g default -d ${HOME} -s /sbin/nologin \
-                        -c "Default Application User" default
-
-USER 1001
-
-ENTRYPOINT ["/usr/bin/container-entrypoint"]
-
-CMD ["container-usage"]
-
+ENTRYPOINT ["/usr/local/bin/run-nginx16.sh"]
+CMD ["nginx", "-g", "daemon off;"]

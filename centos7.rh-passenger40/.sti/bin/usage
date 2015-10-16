@@ -1,0 +1,16 @@
+#!/bin/sh
+
+DISTRO=`cat /etc/*-release | grep ^ID= | grep -Po '".*?"' | tr -d '"'`
+
+cat <<EOF
+This is a STI ruby-2.2 ${DISTRO} base image:
+To use it, install STI: https://github.com/openshift/source-to-image
+
+Sample invocation:
+
+sti build https://github.com/openshift/sti-ruby.git --context-dir=2.2/test/puma-test-app/ openshift/ruby-22-${DISTRO}7 ruby-sample-app
+
+
+You can then run the resulting image via:
+docker run -p 8080:8080 ruby-sample-app
+EOF
