@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+# Warning: Please note that this will pass all environment variables available within the
+# container to mod_perl by means of PerlPassEnv in the env.conf file
+if [ ! -f /opt/app-root/etc/httpd.d/env.conf ]; then
+  env | awk -F'=' '{print "PerlPassEnv "$1}' > /opt/app-root/etc/httpd.d/env.conf
+fi
+
+exec httpd -C 'Include /opt/app-root/etc/httpd.conf' -D FOREGROUND

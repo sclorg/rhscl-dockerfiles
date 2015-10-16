@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+export RACK_ENV=${RACK_ENV:-"production"}
+export RAILS_ENV=${RAILS_ENV:-"${RACK_ENV}"}
+
+exec httpd -DFOREGROUND
