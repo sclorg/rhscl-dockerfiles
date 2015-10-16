@@ -19,7 +19,7 @@
 
 
 # This is a script to refresh content in this repository.
-# It uses these files in current directory as input:
+# It uses these files in current directory as input (may be changed using args):
 #   config.generated -- includes list of images that are generated using rhscl2dockerfile tool
 #   config.remote    -- list of images that have upstream elsewhere
 #   config.local     -- list of images that have upstream in this repository and are not generated
@@ -34,7 +34,7 @@ strip_comments() {
 # checks whether image name lives here
 lives_here() {
   [ -v REGENERATE_LOCALS ] && return 1
-  grep -e "^[[:space:]]*$1[[:space:]]*\$" config.local
+  grep -e "^[[:space:]]*$1[[:space:]]*\$" $CONFIG_LOCAL
   return $?
 }
 
@@ -48,13 +48,14 @@ refresh_generated() {
 
   # generate the dockerfiles first
   workingdir=$(mktemp -d /tmp/rhscl2dockerfile-repo-XXXXXX)
-  git clone "$r2d_repo" "$workingdir"
+  echo "Clonning repo $r2d_repo ..."
+  git clone -q "$r2d_repo" "$workingdir"
   pushd "$workingdir"
   ./generate.py
   popd
 
   # now update all entries specified in config.generated
-  strip_comments config.generated | while read image ; do
+  strip_comments $CONFIG_GENERATED | while read image ; do
     lives_here "$image" && continue
     git rm -r "$image"
     cp -r "$workingdir/$image" "$image"
@@ -73,7 +74,7 @@ refresh_generated() {
 # 3. adds new content from the remote repository into this repository
 # It also renames Dockerfile.rhel{6,7} to Dockerfile
 refresh_remotes() {
-  strip_comments config.remote* | while read entry ; do
+  strip_comments $CONFIG_REMOTE | while read entry ; do
     # parse the entry
     image=$(echo "$entry" | awk '{print $1}')
     repo=$(echo "$entry" | awk '{print $2}')
@@ -86,7 +87,8 @@ refresh_remotes() {
 
     # clone remote repo and copy content
     workingdir=$(mktemp -d /tmp/remote-repo-XXXXXX)
-    git clone $repo $workingdir
+    echo "Clonning repo $repo ..."
+    git clone -q $repo $workingdir
     pushd "$workingdir"
     [ -n "$branch" ] && git checkout "$branch"
     popd
@@ -98,7 +100,7 @@ refresh_remotes() {
     [[ $image =~ rhel6 ]] && [ -f $image/Dockerfile.rhel6 ] && [ ! -L $image/Dockerfile.rhel6 ] && mv -f $image/Dockerfile.rhel6 $image/Dockerfile
 
     # produce some sane info about where the image comes from
-    echo "This image was pulled from $repo (subdirectory $path) at `date -u`." >$image/README.generation
+    echo "This image was pulled from $(echo $repo | sed -e 's/[a-z0-9\.]*redhat.com/internal-url-hidden/g') (subdirectory $path) at `date -u`." >$image/README.generation
     git add $image
     echo "* $image" >>clog
 
@@ -112,7 +114,7 @@ refresh_remotes() {
 show_tracked() {
   print_tracked=${1-0}
   list_tracked=$(mktemp /tmp/tracked-list-XXXXXX)
-  strip_comments config.generated config.local config.remote* | awk '{print $1}' >"$list_tracked"
+  strip_comments $CONFIG_GENERATED $CONFIG_LOCAL $CONFIG_REMOTE | awk '{print $1}' >"$list_tracked"
   git ls-files | grep -e "/" | sed -e 's|/.*||g' | sort | uniq | while read d ; do
     grep -e "^[[:space:]]*${d}[[:space:]]*$" "$list_tracked" >/dev/null && r=0 || r=1
     [ "$print_tracked" -eq $r ] && echo "$d"
@@ -121,11 +123,11 @@ show_tracked() {
 }
 
 show_configured() {
-  strip_comments config.generated config.local config.remote* | awk '{print $1}'
+  strip_comments $CONFIG_GENERATED $CONFIG_LOCAL $CONFIG_REMOTE | awk '{print $1}'
 }
 
 show_missing() {
-  strip_comments config.generated config.local config.remote* | awk '{print $1}' | while read d ; do
+  strip_comments $CONFIG_GENERATED $CONFIG_LOCAL $CONFIG_REMOTE | awk '{print $1}' | while read d ; do
     [ -d "$d" ] || echo "$d"
   done
 }
@@ -136,13 +138,20 @@ usage() {
   echo "Without arguments it generates content of the repository based on config.* files and adds changes into git staging area."
   echo
   echo "Options:"
-  echo "  -h|--help             Print this help"
-  echo "  -t|--list-tracked     Print tracked Dockerfiles (either generated or hosting here)"
-  echo "  -n|--list-not-tracked Print non-tracked Dockerfiles (those that are not generated or hosting here)"
-  echo "  -c|--list-configured  Print configured Dockerfiles (either generated or hosting here)"
-  echo "  -m|--list-missing     Print configured but missing Dockerfiles"
+  echo "  -h|--help                     Print this help"
+  echo "  -t|--list-tracked             Print tracked Dockerfiles (either generated or hosting here)"
+  echo "  -n|--list-not-tracked         Print non-tracked Dockerfiles (those that are not generated or hosting here)"
+  echo "  -c|--list-configured          Print configured Dockerfiles (either generated or hosting here)"
+  echo "  -m|--list-missing             Print configured but missing Dockerfiles"
+  echo "  -r|--config-remote <file>     Set configuration of remote repos to file <file>"
+  echo "  -g|--config-generated <file>  Set configuration of generated repos to file <file>"
+  echo "  -l|--config-local <file>      Set configuration of local repos to file <file>"
+  echo "  -d|--debug                    Sets set -x"
 }
 
+CONFIG_LOCAL='config.local'
+CONFIG_GENERATED='config.generated'
+CONFIG_REMOTE='config.remote'
 while [ $# -ge 1 ] ; do
   case $1 in
     -h|--help)
@@ -165,6 +174,21 @@ while [ $# -ge 1 ] ; do
       show_missing
       exit 0
       ;;
+    -r|--config-remote)
+      CONFIG_REMOTE="$2"
+      shift
+      ;;
+    -l|--config-local)
+      CONFIG_LOCAL="$2"
+      shift
+      ;;
+    -g|--config-generate)
+      CONFIG_GENERATED="$2"
+      shift
+      ;;
+    -d|--debug)
+      set -x
+      ;;
     *)
       usage
       exit 1
@@ -173,7 +197,7 @@ while [ $# -ge 1 ] ; do
   shift
 done
 
-echo "This program regenerates content of this repository based on config.* files and adds the new files into git staging."
+echo "This program regenerates content of this repository based on $CONFIG_GENERATED $CONFIG_LOCAL $CONFIG_REMOTE files and adds the new files into git staging."
 while true; do
     read -p "Do you want to proceed with regeneration? (yes/no): " yn
     case $yn in
