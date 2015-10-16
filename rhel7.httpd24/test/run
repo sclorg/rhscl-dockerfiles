@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+IMAGE_NAME="${IMAGE_NAME:-rhscl/httpd-24-rhel7}"
+
+. ../utils.sh
+
+function create_container() {
+    local name=$1 ; shift
+    cidfile="$CIDFILE_DIR/$name"
+    # create container with a cidfile in a directory for cleanup
+    docker run ${DOCKER_ARGS:-} --cidfile $cidfile -d $IMAGE_NAME || return 1
+    echo "Created container $(cat $cidfile)"
+}
+
+function update_overall {
+    res="$1"
+    if [ "$res" != 0 ]; then
+        overall="$res"
+    fi
+}
+
+function get_cid() {
+  local id="$1" ; shift || return 1
+  echo $(cat "$CIDFILE_DIR/$id")
+}
+
+function check_default_page {
+    curl localhost > output
+    fgrep -e 'Test Page for the Apache HTTP Server on Red Hat Enterprise Linux' output
+}
+
+function rm_container {
+    local name="$1"
+    local cid="`get_cid $name`"
+    docker kill "$cid"
+    docker rm "$cid"
+    rm -f "$CIDFILE_DIR/$name"
+}
+
+function run {
+    cmd="$1"
+    expected_res="${2:-0}"
+    msg="${3:-Running command '$cmd'}"
+    run_command "$cmd" "$expected_res" "$msg"
+    res=$?
+    update_overall $res
+    return $res
+}
+
+tmpdir=`mktemp -d`
+pushd $tmpdir > /dev/null || exit 1
+
+CIDFILE_DIR=cid_files
+mkdir "$CIDFILE_DIR"
+
+overall=0
+
+run "docker pull $IMAGE_NAME" 0
+
+# Check default page
+DOCKER_ARGS='-p 80:80'
+run "create_container test_default_page"
+DOCKER_ARGS=
+sleep 2
+run "check_default_page" 0 "Check that the default page is served."
+rm_container test_default_page
+
+# Check the HTTP_LOG_TO_VOLUME env variable
+run "ls -d /var/log/httpd24-logs || mkdir /var/log/httpd24-logs" 0 'Create log directory'
+run "chcon -Rvt svirt_sandbox_file_t /var/log/httpd24-logs" 0 'Change SELinux context on the log dir'
+DOCKER_ARGS='-p 80:80 -e HTTPD_LOG_TO_VOLUME=1 -v /var/log/httpd24-logs:/var/log/httpd24'
+run "create_container test_log_dir"
+DOCKER_ARGS=
+sleep 2
+run "curl localhost > /dev/null"
+ls /var/log/httpd24-logs > output
+run "grep -e '^access_log$' output" 0 "Checking that file access_log exists"
+run "grep -e '^error_log$' output" 0 "Checking that file error_log exists"
+run "grep -e '^ssl_access_log$' output" 0 "Checking that file ssl_access_log exists"
+run "grep -e '^ssl_error_log$' output" 0 "Checking that file ssl_error_log exists"
+run "grep -e '^ssl_request_log$' output" 0 "Checking that file ssl_request_log exists"
+rm_container test_log_dir
+
+# Test that docker volume for DocumentRoot works
+run "ls -d /var/www/html/ || mkdir -p /var/www/html/" 0 'Create document root'
+run "echo hello > /var/www/html/index.html"
+run "chcon -Rvt svirt_sandbox_file_t /var/www/" 0 'Change SELinux context on the document root'
+DOCKER_ARGS='-p 80:80 -v /var/www:/opt/rh/httpd24/root/var/www'
+run "create_container test_doc_root"
+DOCKER_ARGS=
+sleep 2
+run "curl localhost > output"
+run "grep -e '^hello$' output"
+rm_container test_doc_root
+
+popd > /dev/null
+rm -Rf "$tmpdir"
+
+exit "$overall"
