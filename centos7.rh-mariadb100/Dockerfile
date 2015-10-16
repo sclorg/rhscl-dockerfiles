@@ -1,0 +1,54 @@
+FROM centos:centos7
+
+# MariaDB image for OpenShift.
+#
+# Volumes:
+#  * /var/lib/mysql/data - Datastore for MySQL
+# Environment:
+#  * $MYSQL_USER - Database user name
+#  * $MYSQL_PASSWORD - User's password
+#  * $MYSQL_DATABASE - Name of the database to create
+#  * $MYSQL_ROOT_PASSWORD (Optional) - Password for the 'root' MySQL account
+
+ENV MYSQL_VERSION=10.0 \
+    HOME=/var/lib/mysql
+
+LABEL io.k8s.description="MariaDB is a multi-user, multi-threaded SQL database server" \
+      io.k8s.display-name="MariaDB 10.0" \
+      io.openshift.expose-services="3306:mysql" \
+      io.openshift.tags="database,mysql,mariadb,mariadb100,rh-mariadb100"
+
+EXPOSE 3306
+
+# This image must forever use UID 27 for mysql user so our volumes are
+# safe in the future. This should *never* change, the last test is there
+# to make sure of that.
+RUN rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
+    yum -y --setopt=tsflags=nodocs install https://www.softwarecollections.org/en/scls/rhscl/rh-mariadb100/epel-7-x86_64/download/rhscl-rh-mariadb100-epel-7-x86_64.noarch.rpm && \
+    yum -y --setopt=tsflags=nodocs install gettext hostname bind-utils rh-mariadb100 && \
+    yum clean all && \
+    mkdir -p /var/lib/mysql/data && chown -R mysql.0 /var/lib/mysql && \
+    test "$(id mysql)" = "uid=27(mysql) gid=27(mysql) groups=27(mysql)"
+
+COPY run-*.sh /usr/local/bin/
+COPY contrib /var/lib/mysql/
+
+# Loosen permission bits for group to avoid problems running container with
+# arbitrary UID
+# When only specifying user, group is 0, that's why /var/lib/mysql must have
+# owner mysql.0; that allows to avoid a+rwx for this dir
+RUN chmod -R g+rwx /var/lib/mysql
+
+# When bash is started non-interactively, to run a shell script, for example it
+# looks for this variable and source the content of this file. This will enable
+# the SCL for all scripts without need to do 'scl enable'.
+ENV BASH_ENV=/var/lib/mysql/scl_enable \
+    ENV=/var/lib/mysql/scl_enable \
+    PROMPT_COMMAND=". /var/lib/mysql/scl_enable"
+
+VOLUME ["/var/lib/mysql/data"]
+
+USER 27
+
+ENTRYPOINT ["run-mysqld.sh"]
+CMD ["mysqld"]
