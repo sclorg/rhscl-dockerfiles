@@ -1,7 +1,5 @@
 FROM rhel6
 
-MAINTAINER docker@softwarecollections.org
-
 RUN yum install -y --setopt=tsflags=nodocs yum-utils && \
     yum-config-manager --enable rhel-server-rhscl-6-rpms && \
     yum-config-manager --enable rhel-6-server-optional-rpms && \

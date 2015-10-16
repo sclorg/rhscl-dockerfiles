@@ -1,6 +1,6 @@
 FROM centos:centos7
 
-MAINTAINER docker@softwarecollections.org
+MAINTAINER SoftwareCollections.org <sclorg@redhat.com>
 
 RUN yum -y --setopt=tsflags=nodocs install https://www.softwarecollections.org/en/scls/rhscl/devtoolset-4/epel-7-x86_64/download/rhscl-devtoolset-4-epel-7-x86_64.noarch.rpm && \
     yum clean all

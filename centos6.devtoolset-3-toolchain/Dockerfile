@@ -1,6 +1,6 @@
 FROM centos:centos6
 
-MAINTAINER docker@softwarecollections.org
+MAINTAINER SoftwareCollections.org <sclorg@redhat.com>
 
 RUN yum -y --setopt=tsflags=nodocs install https://www.softwarecollections.org/en/scls/rhscl/devtoolset-3/epel-6-x86_64/download/rhscl-devtoolset-3-epel-6-x86_64.noarch.rpm && \
     yum clean all
