@@ -99,6 +99,12 @@ refresh_remotes() {
     [[ $image =~ rhel7 ]] && [ -f $image/Dockerfile.rhel7 ] && [ ! -L $image/Dockerfile.rhel7 ] && mv -f $image/Dockerfile.rhel7 $image/Dockerfile
     [[ $image =~ rhel6 ]] && [ -f $image/Dockerfile.rhel6 ] && [ ! -L $image/Dockerfile.rhel6 ] && mv -f $image/Dockerfile.rhel6 $image/Dockerfile
 
+    # if current directory doesn't include README or README.md, but it is located in upper directory, then include that one
+    if [ "$path" != "." ] && ! [ -f $image/README.md ] && ! [ -f $image/README ] ; then
+      [ -f $workingdir/$path/../README ] && cp $workingdir/$path/../README $image/
+      [ -f $workingdir/$path/../README.md ] && cp $workingdir/$path/../README.md $image/
+    fi
+
     # produce some sane info about where the image comes from
     echo "This image was pulled from $(echo $repo | sed -e 's/[a-z0-9\.]*redhat.com/internal-url-hidden/g') (subdirectory $path) at `date -u`." >$image/README.generation
     git add $image
