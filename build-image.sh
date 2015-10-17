@@ -26,6 +26,10 @@ docker_build_with_version() {
   git_version=$(git rev-parse --short HEAD)
   echo "LABEL io.openshift.builder-version=\"${git_version}\"" >> "${dockerfile}.version"
   docker build -t ${IMAGE_NAME} -f "${dockerfile}.version" .
+
+  # Cleanup the temporary Dockerfile created by docker build with version
+  trap "rm -f ${DOCKERFILE_PATH}.version" SIGINT SIGQUIT EXIT
+
   if [[ "${SKIP_SQUASH}" != "1" ]]; then
     squash "${dockerfile}.version"
   fi
@@ -93,9 +97,6 @@ while true; do
         * ) echo "Please answer yes or no.";;
     esac
 done
-
-# Cleanup the temporary Dockerfile created by docker build with version
-trap "rm -f ${DOCKERFILE_PATH}.version" SIGINT SIGQUIT EXIT
 
 build_and_tag
 
