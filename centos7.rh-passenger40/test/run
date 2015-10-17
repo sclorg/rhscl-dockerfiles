@@ -49,7 +49,7 @@ prepare() {
   pushd ${test_dir}/${1}-test-app >/dev/null
   git init
   git config user.email "build@localhost" && git config user.name "builder"
-  git add -A && git commit -m "Sample commit"
+  git add -A && git commit -m "Sample commit" || :
   popd >/dev/null
 }
 
@@ -164,6 +164,7 @@ test_scl_usage() {
 }
 
 pushd ${test_dir}
+rm -rf ruby-hello-world db-test-app
 git clone git://github.com/openshift/ruby-hello-world
 mv ruby-hello-world db-test-app
 popd

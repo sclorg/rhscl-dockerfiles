@@ -27,7 +27,7 @@ COPY ./.sti/bin/ /usr/local/sti
 COPY ./contrib/ /opt/app-root
 COPY ./contrib/ /opt/openshift
 
-RUN chown -R 1001:1001 /opt/app-root
+RUN chown -R 1001:0 /opt/app-root
 
 # In order to drop the root user, we have to make some directories world
 # writeable as OpenShift default "security" model is to run the container under
@@ -39,7 +39,7 @@ RUN sed -i -f /opt/app-root/etc/httpdconf.sed /opt/rh/httpd24/root/etc/httpd/con
     mkdir -p /opt/app-root/src/public && \
     chmod -R og+rwx /opt/rh/httpd24/root/var/run/httpd && \
     chmod -R og+rwx /var/run/rh-passenger40 && \
-    chown -R 1001:1001 /opt/app-root /tmp/sessions && \
+    chown -R 1001:0 /opt/app-root /tmp/sessions && \
     cat /opt/app-root/etc/passenger.conf >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 
 USER 1001

@@ -19,6 +19,8 @@ export RAILS_ENV=${RAILS_ENV:-"${RACK_ENV}"}
 
 echo "---> Installing application source"
 cp -Rf /tmp/src/. ./
+chgrp -R 0 ./
+chmod -R g+rw ./
 
 echo "---> Building your Ruby application from source"
 if [ -f Gemfile ]; then
