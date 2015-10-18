@@ -10,6 +10,8 @@ FROM centos:centos7
 #  * $MYSQL_DATABASE - Name of the database to create
 #  * $MYSQL_ROOT_PASSWORD (Optional) - Password for the 'root' MySQL account
 
+MAINTAINER SoftwareCollections.org <sclorg@redhat.com>
+
 ENV MYSQL_VERSION=10.0 \
     HOME=/var/lib/mysql
 
