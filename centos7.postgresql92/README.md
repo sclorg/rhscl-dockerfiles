@@ -1,56 +1,8 @@
-PostgreSQL for OpenShift - Docker images
-========================================
+PostgreSQL Docker image
+=======================
 
-This repository contains Dockerfiles for PostgreSQL images for OpenShift.
+This repository contains Dockerfiles for PostgreSQL images for general usage and OpenShift.
 Users can choose between RHEL and CentOS based images.
-
-
-Versions
----------------
-PostgreSQL versions currently provided are:
-* postgresql-9.2
-* postgresql-9.4
-
-RHEL versions currently supported are:
-* RHEL7
-
-CentOS versions currently supported are:
-* CentOS7
-
-
-Installation
-----------------------
-Choose either the CentOS7 or RHEL7 based image:
-
-*  **RHEL7 based image**
-
-    To build a RHEL7 based image, you need to run Docker build on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ git clone https://github.com/openshift/postgresql.git
-    $ cd postgresql
-    $ make build TARGET=rhel7 VERSION=9.4
-    ```
-
-*  **CentOS7 based image**
-
-    This image is available on DockerHub. To download it run:
-
-    ```
-    $ docker pull openshift/postgresql-92-centos7
-    ```
-
-    To build a PostgreSQL image from scratch run:
-
-    ```
-    $ git clone https://github.com/openshift/postgresql.git
-    $ cd postgresql
-    $ make build VERSION=9.2
-    ```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of PostgreSQL.**
 
 
 Environment variables and volumes
@@ -130,31 +82,3 @@ values stored in the variables and the actual passwords. Whenever a database
 container starts it will reset the passwords to the values stored in the
 environment variables.
 
-
-Test
----------------------------------
-
-This repository also provides a test framework, which checks basic functionality
-of the PostgreSQL image.
-
-Users can choose between testing PostgreSQL based on a RHEL or CentOS image.
-
-*  **RHEL based image**
-
-    To test a RHEL7 based PostgreSQL image, you need to run the test on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ cd postgresql
-    $ make test TARGET=rhel7 VERSION=9.2
-    ```
-
-*  **CentOS based image**
-
-    ```
-    $ cd postgresql
-    $ make test VERSION=9.2
-    ```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of PostgreSQL.**

@@ -83,6 +83,12 @@ if [ "$1" = "mongod" ]; then
       wait_for_mongo_down
     else
       echo "=> Database directory is already initialized. Skipping creation of users ..."
+      # Ensure passwords match environment variables
+      mongod $mongo_common_args &
+      wait_for_mongo_up
+      mongo_reset_passwords
+      mongod $mongo_common_args --shutdown
+      wait_for_mongo_down
     fi
     unset_env_vars
     exec mongod $mongo_common_args --auth
@@ -99,10 +105,15 @@ if [ "$1" = "mongod" ]; then
     if [ ! -v MONGODB_NO_AUTH ]; then
       auth_args=""
     fi
-    unset_env_vars
-    mongod $mongo_common_args --replSet ${MONGODB_REPLICA_NAME} \
-      --keyFile ${MONGODB_KEYFILE_PATH} ${auth_args} & mongo_pid=$!
-    wait $mongo_pid
+    # Run `unset_env_vars` and `mongod` in a subshell because
+    # MONGODB_ADMIN_PASSWORD should still be defined when the trapped call to
+    # `cleanup` references it.
+    (
+      unset_env_vars
+      mongod $mongo_common_args --replSet ${MONGODB_REPLICA_NAME} \
+        --keyFile ${MONGODB_KEYFILE_PATH} ${auth_args}
+    ) &
+    wait
   fi
 else
   exec "$@"

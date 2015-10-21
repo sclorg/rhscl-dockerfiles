@@ -1,56 +1,8 @@
-MongoDB for OpenShift - Docker images
-========================================
+MongoDB Docker image
+====================
 
-This repository contains Dockerfiles for MongoDB images for OpenShift.
+This repository contains Dockerfiles for MongoDB images for general usage and OpenShift.
 Users can choose between RHEL and CentOS based images.
-
-Versions
----------------------------------
-MongoDB versions currently provided are:
-* mongodb-2.4
-* mongodb-2.6
-
-RHEL versions currently supported are:
-* RHEL7
-
-CentOS versions currently supported are:
-* CentOS7
-
-
-Installation
----------------------------------
-Choose either the CentOS7 or RHEL7 based image:
-
-*  **RHEL7 based image**
-
-	To build a RHEL7 based image, you need to run Docker build on a properly
-    subscribed RHEL machine.
-
-	```
-	$ git clone https://github.com/openshift/mongodb.git
-	$ cd mongodb
-	$ make build TARGET=rhel7 VERSION=2.4
-	```
-
-*  **CentOS7 based image**
-
-	This image is available on DockerHub. To download it run:
-
-	```
-	$ docker pull openshift/mongodb-24-centos7
-	```
-
-	To build a MongoDB image from scratch run:
-
-	```
-	$ git clone https://github.com/openshift/mongodb.git
-	$ cd mongodb
-	$ make build VERSION=2.4
-	```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of MongoDB.**
-
 
 Environment variables
 ---------------------------------
@@ -89,12 +41,12 @@ matches the user UID or name which is running inside the container.**
 Usage
 ---------------------------------
 
-For this, we will assume that you are using the `openshift/mongodb-24-centos7` image.
+For this, we will assume that you are using the `centos/mongodb-26-centos7` image.
 If you want to set only the mandatory environment variables and store the database
 in the `/home/user/database` directory on the host filesystem, execute the following command:
 
 ```
-$ docker run -d -e MONGODB_USER=<user> -e MONGODB_PASSWORD=<password> -e MONGODB_DATABASE=<database> -e MONGODB_ADMIN_PASSWORD=<admin_password> -v /home/user/database:/var/lib/mongodb/data openshift/mongodb-24-centos7
+$ docker run -d -e MONGODB_USER=<user> -e MONGODB_PASSWORD=<password> -e MONGODB_DATABASE=<database> -e MONGODB_ADMIN_PASSWORD=<admin_password> -v /home/user/database:/var/lib/mongodb/data centos/mongodb-26-centos7
 ```
 
 If you are initializing the database and it's the first time you are using the
@@ -125,31 +77,3 @@ the values stored in the variables and the actual passwords. Whenever a database
 container starts it will reset the passwords to the values stored in the
 environment variables.
 
-
-Test
----------------------------------
-
-This repository also provides a test framework which checks basic functionality
-of the MongoDB image.
-
-Users can choose between testing MongoDB based on a RHEL or CentOS image.
-
-*  **RHEL based image**
-
-    To test a RHEL7 based MongoDB image, you need to run the test on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ cd mongodb
-    $ make test TARGET=rhel7 VERSION=2.4
-    ```
-
-*  **CentOS based image**
-
-    ```
-    $ cd mongodb
-    $ make test VERSION=2.4
-    ```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of MongoDB.**

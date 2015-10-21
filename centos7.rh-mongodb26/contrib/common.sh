@@ -146,13 +146,20 @@ function run_mongod_supervisor() {
 }
 
 # mongo_create_users creates the MongoDB admin user and the database user
-# configured by MONGO_USER
+# configured by MONGODB_USER
 function mongo_create_users() {
   mongo admin --eval "db.createUser({user: 'admin', pwd: '${MONGODB_ADMIN_PASSWORD}', roles: ['dbAdminAnyDatabase', 'userAdminAnyDatabase' , 'readWriteAnyDatabase','clusterAdmin' ]})"
 
   mongo admin -u admin -p "${MONGODB_ADMIN_PASSWORD}" --eval "db.getSiblingDB('${MONGODB_DATABASE}').createUser({user: '${MONGODB_USER}', pwd: '${MONGODB_PASSWORD}', roles: [ 'readWrite' ]});"
 
   touch /var/lib/mongodb/data/.mongodb_datadir_initialized
+}
+
+# mongo_reset_passwords sets the MongoDB passwords to match MONGODB_PASSWORD
+# and MONGODB_ADMIN_PASSWORD
+function mongo_reset_passwords() {
+  mongo ${MONGODB_DATABASE} --eval "db.changeUserPassword('${MONGODB_USER}', '${MONGODB_PASSWORD}')"
+  mongo admin --eval "db.changeUserPassword('admin', '${MONGODB_ADMIN_PASSWORD}')"
 }
 
 # setup_keyfile fixes the bug in mounting the Kubernetes 'Secret' volume that

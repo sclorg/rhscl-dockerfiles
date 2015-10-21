@@ -1,56 +1,8 @@
-PostgreSQL for OpenShift - Docker images
-========================================
+PostgreSQL Docker image
+=======================
 
-This repository contains Dockerfiles for PostgreSQL images for OpenShift.
+This repository contains Dockerfiles for PostgreSQL images for general usage and OpenShift.
 Users can choose between RHEL and CentOS based images.
-
-
-Versions
----------------
-PostgreSQL versions currently provided are:
-* postgresql-9.2
-* postgresql-9.4
-
-RHEL versions currently supported are:
-* RHEL7
-
-CentOS versions currently supported are:
-* CentOS7
-
-
-Installation
-----------------------
-Choose either the CentOS7 or RHEL7 based image:
-
-*  **RHEL7 based image**
-
-    To build a RHEL7 based image, you need to run Docker build on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ git clone https://github.com/openshift/postgresql.git
-    $ cd postgresql
-    $ make build TARGET=rhel7 VERSION=9.4
-    ```
-
-*  **CentOS7 based image**
-
-    This image is available on DockerHub. To download it run:
-
-    ```
-    $ docker pull openshift/postgresql-92-centos7
-    ```
-
-    To build a PostgreSQL image from scratch run:
-
-    ```
-    $ git clone https://github.com/openshift/postgresql.git
-    $ cd postgresql
-    $ make build VERSION=9.2
-    ```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of PostgreSQL.**
 
 
 Environment variables and volumes
@@ -86,12 +38,12 @@ matches the user UID or name which is running inside the container.**
 Usage
 ----------------------
 
-For this, we will assume that you are using the `openshift/postgresql-92-centos7` image.
+For this, we will assume that you are using the `centos/postgresql-94-centos7` image.
 If you want to set only the mandatory environment variables and not store the database
 in a host directory, execute the following command:
 
 ```
-$ docker run -d --name postgresql_database -e POSTGRESQL_USER=user -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db -p 5432:5432 openshift/postgresql-92-centos7
+$ docker run -d --name postgresql_database -e POSTGRESQL_USER=user -e POSTGRESQL_PASSWORD=pass -e POSTGRESQL_DATABASE=db -p 5432:5432 centos/postgresql-94-centos7
 ```
 
 This will create a container named `postgresql_database` running PostgreSQL with
@@ -101,9 +53,9 @@ executions, also add a `-v /host/db/path:/var/lib/pgsql/data` argument. This wil
 the PostgreSQL database cluster directory.
 
 If the database cluster directory is not initialized, the entrypoint script will
-first run [`initdb`](http://www.postgresql.org/docs/9.2/static/app-initdb.html)
+first run [`initdb`](http://www.postgresql.org/docs/9.4/static/app-initdb.html)
 and setup necessary database users and passwords. After the database is initialized,
-or if it was already present, [`postgres`](http://www.postgresql.org/docs/9.2/static/app-postgres.html)
+or if it was already present, [`postgres`](http://www.postgresql.org/docs/9.4/static/app-postgres.html)
 is executed and will run as PID 1. You can stop the detached container by running
 `docker stop postgresql_database`.
 
@@ -130,31 +82,3 @@ values stored in the variables and the actual passwords. Whenever a database
 container starts it will reset the passwords to the values stored in the
 environment variables.
 
-
-Test
----------------------------------
-
-This repository also provides a test framework, which checks basic functionality
-of the PostgreSQL image.
-
-Users can choose between testing PostgreSQL based on a RHEL or CentOS image.
-
-*  **RHEL based image**
-
-    To test a RHEL7 based PostgreSQL image, you need to run the test on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ cd postgresql
-    $ make test TARGET=rhel7 VERSION=9.2
-    ```
-
-*  **CentOS based image**
-
-    ```
-    $ cd postgresql
-    $ make test VERSION=9.2
-    ```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of PostgreSQL.**

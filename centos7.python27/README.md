@@ -1,5 +1,5 @@
-Python for OpenShift - Docker images
-========================================
+Python Docker image
+===================
 
 This repository contains the source for building various versions of
 the Python application as a reproducible Docker image using
@@ -8,69 +8,21 @@ Users can choose between RHEL and CentOS based builder images.
 The resulting image can be run using [Docker](http://docker.io).
 
 
-Versions
----------------
-Python versions currently provided are:
-* python-2.7
-* python-3.3
-* python-3.4
-
-RHEL versions currently supported are:
-* RHEL7
-
-CentOS versions currently supported are:
-* CentOS7
-
-
-Installation
----------------
-To build a Python image, choose either the CentOS or RHEL based image:
-*  **RHEL based image**
-
-    To build a RHEL based Python image, you need to run the build on a properly
-    subscribed RHEL machine.
-
-    ```
-    $ git clone https://github.com/openshift/sti-python.git
-    $ cd sti-python
-    $ make build TARGET=rhel7 VERSION=3.3
-    ```
-
-*  **CentOS based image**
-
-    This image is available on DockerHub. To download it run:
-
-    ```
-    $ docker pull openshift/python-33-centos7
-    ```
-
-    To build a Python image from scratch run:
-
-    ```
-    $ git clone https://github.com/openshift/sti-python.git
-    $ cd sti-python
-    $ make build VERSION=3.3
-    ```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of Python.**
-
-
 Usage
 ---------------------
-To build a simple [python-sample-app](https://github.com/openshift/sti-python/tree/master/3.3/test/setup-test-app) application
+To build a simple [python-sample-app](https://github.com/openshift/sti-python/tree/master/2.7/test/setup-test-app) application
 using standalone [S2I](https://github.com/openshift/source-to-image) and then run the
 resulting image with [Docker](http://docker.io) execute:
 
 *  **For RHEL based image**
     ```
-    $ s2i build https://github.com/openshift/sti-python.git --context-dir=3.3/test/setup-test-app/ openshift/python-33-rhel7 python-sample-app
+    $ s2i build https://github.com/openshift/sti-python.git --context-dir=2.7/test/setup-test-app/ rhscl/python-27-rhel7 python-sample-app
     $ docker run -p 8080:8080 python-sample-app
     ```
 
 *  **For CentOS based image**
     ```
-    $ s2i build https://github.com/openshift/sti-python.git --context-dir=3.3/test/setup-test-app/ openshift/python-33-centos7 python-sample-app
+    $ s2i build https://github.com/openshift/sti-python.git --context-dir=2.7/test/setup-test-app/ centos/python-27-centos7 python-sample-app
     $ docker run -p 8080:8080 python-sample-app
     ```
 
@@ -78,34 +30,6 @@ resulting image with [Docker](http://docker.io) execute:
 ```
 $ curl 127.0.0.1:8080
 ```
-
-
-Test
----------------------
-This repository also provides a [S2I](https://github.com/openshift/source-to-image) test framework,
-which launches tests to check functionality of a simple Python application built on top of the sti-python image.
-
-Users can choose between testing a Python test application based on a RHEL or CentOS image.
-
-*  **RHEL based image**
-
-    To test a RHEL7-based Python-3.3 image, you need to run the test on a properly subscribed RHEL machine.
-
-    ```
-    $ cd sti-python
-    $ make test TARGET=rhel7 VERSION=3.3
-    ```
-
-*  **CentOS based image**
-
-    ```
-    $ cd sti-python
-    $ make test VERSION=3.3
-    ```
-
-**Notice: By omitting the `VERSION` parameter, the build/test action will be performed
-on all provided versions of Python. Since we are currently providing only version `3.3`
-you can omit this parameter.**
 
 
 Repository organization
@@ -161,21 +85,6 @@ Repository organization
 
             Script that runs the [S2I](https://github.com/openshift/source-to-image) test framework.
 
-* **`hack/`**
-
-    Folder containing scripts which are responsible for build and test actions performed by the `Makefile`.
-
-
-Image name structure
-------------------------
-##### Structure: openshift/1-2-3
-
-1. Platform name (lowercase) - python
-2. Platform version(without dots) - 33
-3. Base builder image - centos7/rhel7
-
-Examples: `openshift/python-33-centos7`, `openshift/python-33-rhel7`
-
 
 Environment variables
 ---------------------
@@ -204,7 +113,7 @@ file inside your source code repository.
 
     If using `setup.py` for installing the application, the `MODULE_NAME` part
     can be read from there. For an example, see
-    [setup-test-app](https://github.com/openshift/sti-python/tree/master/3.3/test/setup-test-app).
+    [setup-test-app](https://github.com/openshift/sti-python/tree/master/2.7/test/setup-test-app).
 
 * **APP_CONFIG**
 
