@@ -1,7 +1,7 @@
-MariaDB for OpenShift and general usage - Docker image
-======================================================
+MariaDB Docker image
+====================
 
-This container image includes MariaDB server 5.6 for OpenShift and general usage.
+This container image includes MariaDB server 10.0 for OpenShift and general usage.
 
 
 Environment variables and volumes
@@ -40,12 +40,12 @@ matches the user UID or name which is running inside the container.**
 Usage
 ---------------------------------
 
-For this, we will assume that you are using the `centos/mariadb-100-rhel7` image.
+For this, we will assume that you are using the `centos/mariadb-100-centos7` image.
 If you want to set only the mandatory environment variables and not store
 the database in a host directory, execute the following command:
 
 ```
-$ docker run -d --name mariadb_database -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -p 3306:3306 centos/mariadb-100-rhel7
+$ docker run -d --name mariadb_database -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -p 3306:3306 centos/mariadb-100-centos7
 ```
 
 This will create a container named `mariadb_database` running MySQL with database

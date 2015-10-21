@@ -1,7 +1,7 @@
-MariaDB for OpenShift and general usage - Docker image
-======================================================
+MariaDB Docker image
+====================
 
-This container image includes MariaDB server 5.6 for OpenShift and general usage.
+This container image includes MariaDB server 10.0 for OpenShift and general usage.
 
 
 Environment variables and volumes
