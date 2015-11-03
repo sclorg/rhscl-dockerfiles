@@ -13,8 +13,8 @@ LABEL io.k8s.description="Platform for building and running Ruby 2.2 application
       io.openshift.tags="builder,ruby,ruby22"
 
 # Labels consumed by Red Hat build service
-LABEL BZComponent="rh-ruby22" \
-      Name="openshift3/ruby-22-rhel7" \
+LABEL Name="rhscl/ruby-22-rhel7" \
+      BZComponent="rh-ruby22-docker" \
       Version="2.2" \
       Release="1" \
       Architecture="x86_64"

@@ -4,8 +4,6 @@ set -e
 
 echo "---> Installing application source"
 cp -Rf /tmp/src/. ./
-chgrp -R 0 ./
-chmod -R g+rw ./
 
 if [ -d ./cfg ]; then
   echo "---> Copying configuration files..."
@@ -36,3 +34,6 @@ if [ -f "cpanfile" ]; then
 else
   echo "---> No cpanfile found, nothing to install"
 fi
+
+# Fix source directory permissions
+fix-permissions ./

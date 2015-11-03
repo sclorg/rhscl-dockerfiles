@@ -12,8 +12,8 @@ LABEL io.k8s.description="Platform for building and running Perl 5.20 applicatio
       io.openshift.tags="builder,perl,perl520"
 
 # Labels consumed by Red Hat build service
-LABEL BZComponent="rh-perl520" \
-      Name="openshift3/perl-520-rhel7" \
+LABEL Name="rhscl/perl-520-rhel7" \
+      BZComponent="rh-perl520-docker" \
       Version="5.20" \
       Release="1" \
       Architecture="x86_64"
