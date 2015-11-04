@@ -20,7 +20,7 @@ RUN rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     yum clean all -y
 
 # Copy the STI scripts from the specific language image to /usr/local/sti
-COPY ./.sti/bin/ /usr/local/sti
+COPY ./.sti/bin/ $STI_SCRIPTS_PATH
 
 # Each language image can have 'contrib' a directory with extra files needed to
 # run and build the applications.
@@ -45,4 +45,4 @@ RUN sed -i -f /opt/app-root/etc/httpdconf.sed /opt/rh/httpd24/root/etc/httpd/con
 USER 1001
 
 # Set the default CMD to print the usage of the language image
-CMD ["usage"]
+CMD "$STI_SCRIPTS_PATH/usage"
