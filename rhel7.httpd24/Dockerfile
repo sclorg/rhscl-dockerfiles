@@ -1,4 +1,4 @@
-FROM rhel7
+FROM rhel7.1
 
 # RHSCL httpd24 image.
 #
@@ -12,7 +12,7 @@ FROM rhel7
 LABEL Component="httpd24-docker" \
       Name="rhscl/httpd-24-rhel7" \
       Version="2.4" \
-      Release="7" \
+      Release="8" \
       BZComponent="httpd24-docker" \
       Architecture="x86_64"
 

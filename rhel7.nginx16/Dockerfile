@@ -1,4 +1,4 @@
-FROM rhel7
+FROM rhel7.1
 
 # RHSCL nginx16 image.
 #
@@ -12,7 +12,7 @@ FROM rhel7
 LABEL Component="nginx16-docker" \
       Name="rhscl/nginx-16-rhel7" \
       Version="1.6" \
-      Release="4" \
+      Release="5" \
       BZComponent="nginx16-docker" \
       Architecture="x86_64"
 
