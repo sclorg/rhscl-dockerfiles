@@ -57,7 +57,9 @@ refresh_generated() {
   # now update all entries specified in config.generated
   strip_comments $CONFIG_GENERATED | while read image ; do
     lives_here "$image" && continue
-    git rm -r "$image"
+    if test -d "$image"; then
+        git rm -rf "$image"
+    fi
     cp -r "$workingdir/$image" "$image"
 
     # produce some sane info about where the image comes from
