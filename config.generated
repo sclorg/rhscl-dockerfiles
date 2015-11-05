@@ -61,3 +61,9 @@ rhel7.devtoolset-4-oprofile
 rhel7.devtoolset-4-systemtap
 rhel7.devtoolset-4-toolchain
 rhel7.devtoolset-4-valgrind
+
+rhel7.ruby193
+rhel7.mariadb55
+rhel7.php54
+rhel7.ruby193
+rhel7.ruby200
