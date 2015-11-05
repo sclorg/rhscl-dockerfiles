@@ -108,7 +108,7 @@ refresh_remotes() {
     fi
 
     # produce some sane info about where the image comes from
-    echo "This image was pulled from $(echo $repo | sed -e 's/[a-z0-9\.]*redhat.com/internal-url-hidden/g') (subdirectory $path) at `date -u`." >$image/README.generation
+    echo "This image was pulled from $(echo $repo | sed -e 's/[a-z0-9\.]*redhat.com/internal-url-hidden/g') (subdirectory $path)." >$image/README.generation
     git add $image
     echo "* $image" >>clog
 
