@@ -63,7 +63,7 @@ refresh_generated() {
     cp -r "$workingdir/$image" "$image"
 
     # produce some sane info about where the image comes from
-    echo "This image was generated from $r2d_repo (subdirectory $image) at `date -u`." >"$image/README.generation"
+    echo "This image was generated from $r2d_repo (subdirectory $image)." >"$image/README.generation"
     git add "$image"
     echo "* $image" >>clog
   done
