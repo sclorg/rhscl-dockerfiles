@@ -1,6 +1,8 @@
 #!/bin/sh
 
 DISTRO=`cat /etc/*-release | grep ^ID= | grep -Po '".*?"' | tr -d '"'`
+NAMESPACE=centos
+[[ $DISTRO =~ rhel* ]] && NAMESPACE=rhscl
 
 cat <<EOF
 This is a S2I ruby-2.2 ${DISTRO} base image:
@@ -8,7 +10,7 @@ To use it, install S2I: https://github.com/openshift/source-to-image
 
 Sample invocation:
 
-s2i build https://github.com/openshift/sti-ruby.git --context-dir=2.2/test/puma-test-app/ openshift/ruby-22-${DISTRO}7 ruby-sample-app
+s2i build https://github.com/openshift/sti-ruby.git --context-dir=2.2/test/puma-test-app/ ${NAMESPACE}/ruby-22-${DISTRO}7 ruby-sample-app
 
 
 You can then run the resulting image via:
