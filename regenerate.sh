@@ -70,7 +70,7 @@ refresh_generated() {
   rm -rf "$workingdir"
 }
 
-# for every entry in confit.remote
+# for every entry in config.remote
 # 1. clones remote directory
 # 2. removes old content in the directory of the image in this repository
 # 3. adds new content from the remote repository into this repository
