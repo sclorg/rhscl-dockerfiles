@@ -9,7 +9,7 @@
 set -exo nounset
 shopt -s nullglob
 
-IMAGE_NAME=${IMAGE_NAME-openshift/mariadb-100-centos7-candidate}
+IMAGE_NAME=${IMAGE_NAME-centos/mariadb-100-centos7-candidate}
 
 CIDFILE_DIR=$(mktemp --suffix=mysql_test_cidfiles -d)
 
@@ -139,6 +139,29 @@ function run_replication_test() {
     fi
     if [[ "${i}" == "${max_attempts}" ]]; then
       echo "The ${slave_ip} failed to register in MASTER"
+      echo "Dumping logs for $(get_cid slave.cid)"
+      docker logs $(get_cid slave.cid)
+      return 1
+    fi
+    sleep 1
+  done
+
+  # do some real work to test replication in practice
+  CONTAINER_IP=${master_ip} USER=root PASS=root \
+    mysql_cmd -e "CREATE TABLE t1 (a INT); INSERT INTO t1 VALUES (24);"
+
+  # read value from slave and check whether it is expectd
+  for i in $(seq $max_attempts); do
+    set +e
+    result=$(CONTAINER_IP=${slave_ip} USER=root PASS=root \
+      mysql_cmd -e "select * from t1 \G" | grep -e ^a | grep 24)
+    set -e
+    if [[ ! -z "${result}" ]]; then
+      echo "${slave_ip} successfully got value from MASTER ${master_ip}"
+      break
+    fi
+    if [[ "${i}" == "${max_attempts}" ]]; then
+      echo "The ${slave_ip} failed to see value added on MASTER"
       echo "Dumping logs for $(get_cid slave.cid)"
       docker logs $(get_cid slave.cid)
       return 1
