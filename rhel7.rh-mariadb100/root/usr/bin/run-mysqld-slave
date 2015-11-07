@@ -29,8 +29,21 @@ envsubst < ${CONTAINER_SCRIPTS_PATH}/my-repl-gtid.cnf.template > /etc/my.cnf.d/r
 initialize_database "$@"
 wait_for_mysql_master
 
+# Get binlog file and position from master
+STATUS_INFO=$(mysql --host "$MYSQL_MASTER_SERVICE_NAME" "-u${MYSQL_MASTER_USER}" "-p${MYSQL_MASTER_PASSWORD}" replication -e 'SELECT gtid from replication limit 1\G')
+GTID_VALUE=$(echo "$STATUS_INFO" | grep 'gtid:' | head -n 1 | sed -e 's/^\s*gtid: //')
+
+# checking STATUS_INFO here because empty GTID_VALUE is valid value
+if [ -z "${STATUS_INFO}" ] ; then
+  echo "Could not read GTID value from master"
+  exit 1
+fi
+
 mysql $mysql_flags <<EOSQL
-  CHANGE MASTER TO MASTER_HOST='${MYSQL_MASTER_SERVICE_NAME}',MASTER_USER='${MYSQL_MASTER_USER}', MASTER_PASSWORD='${MYSQL_MASTER_PASSWORD}', MASTER_USE_GTID=current_pos;
+  STOP SLAVE;
+  SET GLOBAL gtid_slave_pos = "${GTID_VALUE}";
+  CHANGE MASTER TO MASTER_HOST='${MYSQL_MASTER_SERVICE_NAME}',MASTER_USER='${MYSQL_MASTER_USER}', MASTER_PASSWORD='${MYSQL_MASTER_PASSWORD}', MASTER_USE_GTID=slave_pos;
+  START SLAVE;
 EOSQL
 
 [ -f ${CONTAINER_SCRIPTS_PATH}/post-init.sh ] && . ${CONTAINER_SCRIPTS_PATH}/post-init.sh

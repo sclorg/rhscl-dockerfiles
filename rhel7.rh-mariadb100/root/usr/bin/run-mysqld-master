@@ -5,6 +5,8 @@
 source ${CONTAINER_SCRIPTS_PATH}/common.sh
 set -eu
 
+export MYSQL_RUNNING_AS_MASTER=1
+
 [ -f ${CONTAINER_SCRIPTS_PATH}/validate_replication_variables.sh ] && . ${CONTAINER_SCRIPTS_PATH}/validate_replication_variables.sh
 [ -f ${CONTAINER_SCRIPTS_PATH}/validate_variables.sh ] && . ${CONTAINER_SCRIPTS_PATH}/validate_variables.sh
 
@@ -29,6 +31,7 @@ fi
 # Setup the 'master' replication on the MySQL server
 mysql $mysql_flags <<EOSQL
   GRANT REPLICATION SLAVE ON *.* TO '${MYSQL_MASTER_USER}'@'%' IDENTIFIED BY '${MYSQL_MASTER_PASSWORD}';
+  GRANT SELECT ON replication.* TO '${MYSQL_MASTER_USER}'@'%' IDENTIFIED BY '${MYSQL_MASTER_PASSWORD}';
   FLUSH PRIVILEGES;
 EOSQL
 
