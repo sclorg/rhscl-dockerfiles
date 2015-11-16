@@ -1,14 +1,16 @@
 #!/bin/sh
 
 DISTRO=`cat /etc/*-release | grep ^ID= | grep -Po '".*?"' | tr -d '"'`
+NAMESPACE=centos
+[[ $DISTRO =~ rhel* ]] && NAMESPACE=rhscl
 
 cat <<EOF
-This is a STI ruby-2.2 ${DISTRO} base image:
-To use it, install STI: https://github.com/openshift/source-to-image
+This is a S2I Passenger 4.0 ${DISTRO} base image:
+To use it, install S2I: https://github.com/openshift/source-to-image
 
 Sample invocation:
 
-sti build https://github.com/openshift/sti-ruby.git --context-dir=2.2/test/puma-test-app/ openshift/ruby-22-${DISTRO}7 ruby-sample-app
+s2i build https://github.com/openshift/sti-ruby.git --context-dir=2.2/test/puma-test-app/ ${NAMESPACE}/passenger-40-${DISTRO}7 ruby-sample-app
 
 
 You can then run the resulting image via:
