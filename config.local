@@ -26,8 +26,6 @@ rhel7.rh-perl520
 
 rhel7.rh-ruby22
 
-rhel7.nodejs010
-
 rhel7.rh-mongodb26
 
 rhel7.rh-mysql56
