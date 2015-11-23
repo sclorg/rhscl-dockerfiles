@@ -22,7 +22,7 @@ LABEL io.k8s.description="MariaDB is a multi-user, multi-threaded SQL database s
 LABEL BZComponent="rh-mariadb100-docker" \
       Name="rhscl/mariadb-100-rhel7" \
       Version="10.0" \
-      Release="6" \
+      Release="10" \
       Architecture="x86_64"
 
 EXPOSE 3306

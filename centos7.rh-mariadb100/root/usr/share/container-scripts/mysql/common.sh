@@ -61,6 +61,22 @@ function initialize_database() {
 
   [ -v MYSQL_RUNNING_AS_SLAVE ] && return
 
+  if [ -v MYSQL_RUNNING_AS_MASTER ]; then
+    # Save master status into a separate database.
+    STATUS_INFO=$(mysql $admin_flags -e 'SHOW MASTER STATUS\G')
+    BINLOG_POSITION=$(echo "$STATUS_INFO" | grep 'Position:' | head -n 1 | sed -e 's/^\s*Position: //')
+    BINLOG_FILE=$(echo "$STATUS_INFO" | grep 'File:' | head -n 1 | sed -e 's/^\s*File: //')
+    GTID_INFO=$(mysql $admin_flags -e "SELECT BINLOG_GTID_POS('$BINLOG_FILE', '$BINLOG_POSITION') AS gtid_value \G")
+    GTID_VALUE=$(echo "$GTID_INFO" | grep 'gtid_value:' | head -n 1 | sed -e 's/^\s*gtid_value: //')
+
+    mysqladmin $admin_flags create replication
+    mysql $admin_flags <<EOSQL
+    use replication
+    CREATE TABLE replication (gtid VARCHAR(256));
+    INSERT INTO replication (gtid) VALUES ('$GTID_VALUE');
+EOSQL
+  fi
+
   # Do not care what option is compulsory here, just create what is specified
   if [ -v MYSQL_USER ]; then
 mysql $mysql_flags <<EOSQL
