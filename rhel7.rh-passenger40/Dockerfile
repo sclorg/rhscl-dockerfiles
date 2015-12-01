@@ -18,7 +18,7 @@ RUN yum install -y --setopt=tsflags=nodocs rh-ruby22 rh-ruby22-ruby-devel rh-rub
     yum clean all -y
 
 # Copy the STI scripts from the specific language image to $STI_SCRIPTS_PATH
-COPY ./.sti/bin/ $STI_SCRIPTS_PATH
+COPY ./s2i/bin/ $STI_SCRIPTS_PATH
 
 # Each language image can have 'contrib' a directory with extra files needed to
 # run and build the applications.
