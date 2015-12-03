@@ -1,4 +1,4 @@
-FROM rhel7.1
+FROM rhel7.2
 
 # MariaDB image for OpenShift.
 #
