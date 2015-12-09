@@ -19,7 +19,9 @@ LABEL BZComponent="rh-ruby22-docker" \
       Release="6" \
       Architecture="x86_64"
 
-RUN yum install -y --setopt=tsflags=nodocs rh-ruby22 rh-ruby22-ruby-devel rh-ruby22-rubygem-rake v8314 rh-ruby22-rubygem-bundler nodejs010 && \
+RUN yum-config-manager --enable rhel-server-rhscl-7-rpms && \
+    yum-config-manager --enable rhel-7-server-optional-rpms && \
+    yum install -y --setopt=tsflags=nodocs rh-ruby22 rh-ruby22-ruby-devel rh-ruby22-rubygem-rake v8314 rh-ruby22-rubygem-bundler nodejs010 && \
     yum clean all -y
 
 # Copy the STI scripts from the specific language image to /usr/local/sti
