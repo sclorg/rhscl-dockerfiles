@@ -20,7 +20,7 @@ using standalone [S2I](https://github.com/openshift/source-to-image) and then ru
 resulting image with [Docker](http://docker.io) execute:
 
 ```
-$ s2i build https://github.com/sclorg/rhscl-dockerfiles.git --context-dir=centos7.rh-passenger40/test/puma-test-app/ centos/passeger-40-centos7 puma-sample-app
+$ s2i build https://github.com/sclorg/rhscl-dockerfiles.git --context-dir=centos7.rh-passenger40/test/puma-test-app/ centos/passenger-40-centos7 puma-sample-app
 $ docker run -p 8080:8080 puma-sample-app
 ```
 
