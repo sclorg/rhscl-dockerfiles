@@ -1,0 +1,34 @@
+diff -ur rh-mariadb100-docker/root/usr/share/container-scripts/mysql/common.sh rh-mariadb101-docker/root/usr/share/container-scripts/mysql/common.sh
+--- rh-mariadb100-docker/root/usr/share/container-scripts/mysql/common.sh	2016-03-14 15:35:19.884431846 +0100
++++ rh-mariadb101-docker/root/usr/share/container-scripts/mysql/common.sh	2016-03-14 14:57:49.244376243 +0100
+@@ -97,6 +97,7 @@
+ 
+   if [ -v MYSQL_ROOT_PASSWORD ]; then
+ mysql $mysql_flags <<EOSQL
++    CREATE USER IF NOT EXISTS 'root'@'%';
+     GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+ EOSQL
+   fi
+diff -ur rh-mariadb100-docker/root/usr/share/container-scripts/mysql/passwd-change.sh rh-mariadb101-docker/root/usr/share/container-scripts/mysql/passwd-change.sh
+--- rh-mariadb100-docker/root/usr/share/container-scripts/mysql/passwd-change.sh	2016-03-14 15:35:19.884431846 +0100
++++ rh-mariadb101-docker/root/usr/share/container-scripts/mysql/passwd-change.sh	2016-03-14 14:57:49.245376251 +0100
+@@ -9,16 +9,14 @@
+ # The MYSQL_ROOT_PASSWORD is optional, therefore we need to either enable remote
+ # access with a password if the variable is set or disable remote access otherwise.
+ if [ -v MYSQL_ROOT_PASSWORD ]; then
+-  # GRANT will create a user if it doesn't exist and set its password
++  # create a user if it doesn't exist and set its password
+   mysql $mysql_flags <<EOSQL
++    CREATE USER IF NOT EXISTS 'root'@'%';
+     GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+ EOSQL
+ else
+-  # We do GRANT and DROP USER to emulate a DROP USER IF EXISTS statement
+-  # http://bugs.mysql.com/bug.php?id=19166
+   mysql $mysql_flags <<EOSQL
+-    GRANT USAGE ON *.* TO 'root'@'%';
+-    DROP USER 'root'@'%';
++    DROP USER IF EXISTS 'root'@'%';
+     FLUSH PRIVILEGES;
+ EOSQL
+ fi
