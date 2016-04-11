@@ -18,7 +18,7 @@ RUN rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
     yum -y install centos-release-scl && \
     yum-config-manager --enable centos-sclo-rh-testing && \
     INSTALL_PKGS="rh-nodejs4 rh-nodejs4-npm rh-nodejs4-nodejs-nodemon" && \
-    yum install -y --setopt=tsflags=nodocs install --nogpgcheck $INSTALL_PKGS && \
+    yum -y --setopt=tsflags=nodocs install --nogpgcheck $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all -y
 
