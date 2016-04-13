@@ -56,7 +56,6 @@ run "fgrep 'ruby 2.3' output"
 run "docker run --rm $IMAGE_NAME /bin/bash -c 'rails -v' > output"
 run "fgrep 'Rails 4.2' output"
 run "docker run --rm $IMAGE_NAME /bin/bash -c 'node -v' > output"
-run "echo $output"
 run "fgrep 'v4.' output"
 
 # Check Rails welcome page
