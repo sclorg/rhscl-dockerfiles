@@ -104,6 +104,9 @@ refresh_remotes() {
     # do not include specific build id in the Dockerfile
     sed -i -e 's/^\(FROM\s+\)\(rhel7.*\)$/\1rhel7/' $image/Dockerfile
 
+    # remove osbs logs
+    rm -rf $image/.osbs-logs
+
     # if current directory doesn't include README or README.md, but it is located in upper directory, then include that one
     if [ "$path" != "." ] && ! [ -f $image/README.md ] && ! [ -f $image/README ] ; then
       [ -f $workingdir/$path/../README ] && cp $workingdir/$path/../README $image/
