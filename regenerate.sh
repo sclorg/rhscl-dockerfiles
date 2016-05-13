@@ -152,7 +152,7 @@ usage() {
   echo "  -c|--list-configured          Print configured Dockerfiles (either generated or hosting here)"
   echo "  -m|--list-missing             Print configured but missing Dockerfiles"
   echo "  -r|--config-remote <file>     Set configuration of remote repos to file <file>"
-  echo "  -g|--config-generated <file>  Set configuration of generated repos to file <file>"
+  echo "  -g|--config-generate <file>  Set configuration of generated repos to file <file>"
   echo "  -l|--config-local <file>      Set configuration of local repos to file <file>"
   echo "  -d|--debug                    Sets set -x"
 }
