@@ -102,7 +102,7 @@ refresh_remotes() {
     [[ $image =~ rhel6 ]] && [ -f $image/Dockerfile.rhel6 ] && [ ! -L $image/Dockerfile.rhel6 ] && mv -f $image/Dockerfile.rhel6 $image/Dockerfile
 
     # do not include specific build id in the Dockerfile
-    sed -i -e 's/^\(FROM\s+\)\(rhel7.*\)$/\1rhel7/' $image/Dockerfile
+    sed -i -e 's/^\(FROM\s*\)\(rhel7.*\)$/\1rhel7/' $image/Dockerfile
 
     # remove osbs logs
     rm -rf $image/.osbs-logs
