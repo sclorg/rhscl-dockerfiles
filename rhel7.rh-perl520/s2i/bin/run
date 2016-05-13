@@ -2,10 +2,25 @@
 
 set -e
 
+# CPAN can install scripts. They should be available from mod_perl too.
+export PATH=${PATH}:/opt/app-root/src/extlib/bin
+# And we have to set Perl include path too because mod_perl's PerlSwitches
+# does not apply to them.
+export PERL5LIB=/opt/app-root/src/extlib/lib/perl5
+
 # Warning: Please note that this will pass all environment variables available within the
 # container to mod_perl by means of PerlPassEnv in the env.conf file
 if [ ! -f /opt/app-root/etc/httpd.d/env.conf ]; then
   env | awk -F'=' '{print "PerlPassEnv "$1}' > /opt/app-root/etc/httpd.d/env.conf
+fi
+
+# Enable automatic reloading. This can be useful for debugging an application.
+PERL_APACHE2_RELOAD=${PERL_APACHE2_RELOAD:-}
+if [[ "${PERL_APACHE2_RELOAD,,}" == "true" ]]; then
+  cat > /opt/app-root/etc/httpd.d/50-autoreload.conf <<EOF
+PerlModule Apache2::Reload
+PerlInitHandler Apache2::Reload
+EOF
 fi
 
 exec httpd -C 'Include /opt/app-root/etc/httpd.conf' -D FOREGROUND

@@ -1,4 +1,4 @@
-FROM openshift/base-rhel7
+FROM openshift3/sti-base:1.0
 
 # This image provides an Apache+PHP environment for running PHP
 # applications.
@@ -17,16 +17,19 @@ LABEL io.k8s.description="Platform for building and running PHP 5.5 applications
 LABEL BZComponent="openshift-sti-php-docker" \
       Name="openshift3/php-55-rhel7" \
       Version="5.5" \
-      Release="1" \
+      Release="34" \
       Architecture="x86_64"
 
 # Install Apache httpd and PHP
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum install -y --setopt=tsflags=nodocs httpd24 php55 php55-php php55-php-mysqlnd php55-php-pgsql php55-php-bcmath php55-php-devel \
-    php55-php-fpm php55-php-gd php55-php-intl php55-php-ldap php55-php-mbstring php55-php-pdo \
-    php55-php-pecl-memcache php55-php-process php55-php-soap php55-php-opcache php55-php-xml \
-    php55-php-pecl-imagick php55-php-pecl-xdebug && \
+    yum-config-manager --enable rhel-7-server-ose-3.2-rpms && \
+    INSTALL_PKGS="httpd24 php55 php55-php php55-php-mysqlnd php55-php-pgsql php55-php-bcmath php55-php-devel \
+                  php55-php-fpm php55-php-gd php55-php-intl php55-php-ldap php55-php-mbstring php55-php-pdo \
+                  php55-php-pecl-memcache php55-php-process php55-php-soap php55-php-opcache php55-php-xml \
+                  php55-php-pecl-imagick php55-php-pecl-xdebug" && \
+    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum clean all -y
 
 # Copy the S2I scripts from the specific language image to $STI_SCRIPTS_PATH

@@ -1,4 +1,4 @@
-FROM rhel7
+FROM rhel:7.2-released
 
 # MySQL image for OpenShift.
 #
@@ -13,7 +13,8 @@ FROM rhel7
 ENV MYSQL_VERSION=5.6 \
     HOME=/var/lib/mysql
 
-LABEL io.k8s.description="MySQL is a multi-user, multi-threaded SQL database server" \
+LABEL summary="MySQL is a multi-user, multi-threaded SQL database server" \
+      io.k8s.description="MySQL is a multi-user, multi-threaded SQL database server" \
       io.k8s.display-name="MySQL 5.6" \
       io.openshift.expose-services="3306:mysql" \
       io.openshift.tags="database,mysql,mysql56,rh-mysql56"
@@ -22,7 +23,7 @@ LABEL io.k8s.description="MySQL is a multi-user, multi-threaded SQL database ser
 LABEL BZComponent="rh-mysql56-docker" \
       Name="rhscl/mysql-56-rhel7" \
       Version="5.6" \
-      Release="6" \
+      Release="13.3" \
       Architecture="x86_64"
 
 EXPOSE 3306
@@ -33,30 +34,36 @@ EXPOSE 3306
 RUN yum install -y yum-utils gettext hostname && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum install -y --setopt=tsflags=nodocs bind-utils rh-mysql56 && \
+    INSTALL_PKGS="rsync tar gettext hostname bind-utils rh-mysql56" && \
+    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum clean all && \
     mkdir -p /var/lib/mysql/data && chown -R mysql.0 /var/lib/mysql && \
     test "$(id mysql)" = "uid=27(mysql) gid=27(mysql) groups=27(mysql)"
 
-COPY run-*.sh /usr/local/bin/
-COPY contrib /var/lib/mysql/
-
-# Loosen permission bits for group to avoid problems running container with
-# arbitrary UID
-# When only specifying user, group is 0, that's why /var/lib/mysql must have
-# owner mysql.0; that allows to avoid a+rwx for this dir
-RUN chmod -R g+rwx /var/lib/mysql
+# Get prefix path and path to scripts rather than hard-code them in scripts
+ENV CONTAINER_SCRIPTS_PATH=/usr/share/container-scripts/mysql \
+    MYSQL_PREFIX=/opt/rh/rh-mysql56/root/usr \
+    ENABLED_COLLECTIONS=rh-mysql56
 
 # When bash is started non-interactively, to run a shell script, for example it
 # looks for this variable and source the content of this file. This will enable
 # the SCL for all scripts without need to do 'scl enable'.
-ENV BASH_ENV=/var/lib/mysql/scl_enable \
-    ENV=/var/lib/mysql/scl_enable \
-    PROMPT_COMMAND=". /var/lib/mysql/scl_enable"
+ENV BASH_ENV=${CONTAINER_SCRIPTS_PATH}/scl_enable \
+    ENV=${CONTAINER_SCRIPTS_PATH}/scl_enable \
+    PROMPT_COMMAND=". ${CONTAINER_SCRIPTS_PATH}/scl_enable"
+
+ADD root /
+
+# this is needed due to issues with squash
+# when this directory gets rm'd by the container-setup
+# script.
+RUN rm -rf /etc/my.cnf.d/* 
+RUN /usr/libexec/container-setup
 
 VOLUME ["/var/lib/mysql/data"]
 
 USER 27
 
-ENTRYPOINT ["run-mysqld.sh"]
-CMD ["mysqld"]
+ENTRYPOINT ["container-entrypoint"]
+CMD ["run-mysqld"]

@@ -11,7 +11,7 @@ ENV PASSENGER_VERSION 4.0
 LABEL BZComponent="rh-passenger40-docker" \
       Name="rhscl/passenger-40-rhel7" \
       Version="4.0" \
-      Release="29" \
+      Release="33.3" \
       Architecture="x86_64"
 
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms && \

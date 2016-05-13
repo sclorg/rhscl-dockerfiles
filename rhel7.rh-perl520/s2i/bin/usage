@@ -1,15 +1,16 @@
 #!/bin/sh
 
 DISTRO=`cat /etc/*-release | grep ^ID= | grep -Po '".*?"' | tr -d '"'`
+NAMESPACE=centos
+[[ $DISTRO =~ rhel* ]] && NAMESPACE=rhscl
 
 cat <<EOF
 This is a S2I ${IMAGE_DESCRIPTION} ${DISTRO} base image:
-To use it, install source-to-image package or build S2I tool from
-<https://github.com/openshift/source-to-image>.
+To use it, install S2I: https://github.com/openshift/source-to-image
 
 Sample invocation:
 
-s2i build https://github.com/openshift/sti-perl.git --context-dir=5.20/test/sample-test-app/ openshift/perl-520-${DISTRO}7 perl-sample-app
+s2i build https://github.com/openshift/sti-perl.git --context-dir=5.20/test/sample-test-app/ ${NAMESPACE}/perl-520-${DISTRO}7 perl-sample-app
 
 You can then run the resulting image via:
 docker run -p 8080:8080 perl-sample-app

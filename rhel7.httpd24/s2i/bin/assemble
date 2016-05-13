@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+
+echo "---> Enabling s2i support in httpd24 image"
+
+sed -i -f /opt/app-root/httpdconf.sed /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
+sed -i -f /opt/app-root/sslconf.sed /opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf && \
+echo 'IncludeOptional /opt/app-root/etc/httpd.d/*.conf' >> /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
+head -n151 /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf | tail -n1 | grep "AllowOverride All" || exit
+sed -ri ' s!^(\s*CustomLog)\s+\S+!\1 |/usr/bin/cat!g; s!^(\s*ErrorLog)\s+\S+!\1 |/usr/bin/cat!g;' /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
+sed -ri ' s!^(\s*CustomLog)\s+\S+!\1 |/usr/bin/cat!g; s!^(\s*TransferLog)\s+\S+!\1 |/usr/bin/cat!g; s!^(\s*ErrorLog)\s+\S+!\1 |/usr/bin/cat!g;' /opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf
+
+echo "---> Installing application source"
+cp -Rf /tmp/src/. ./
+
+if [ -d ./httpd-cfg ]; then
+  echo "---> Copying httpd configuration files..."
+  if [ "$(ls -A ./httpd-cfg/*.conf)" ]; then
+    cp -v ./httpd-cfg/*.conf "${HTTPD_CONFIGURATION_PATH}"
+    rm -rf ./httpd-cfg
+  fi
+else
+  if [ -d ./cfg ]; then
+    echo "---> Copying httpd configuration files from deprecated './cfg' directory, use './httpd-cfg' instead..."
+    if [ "$(ls -A ./cfg/*.conf)" ]; then
+      cp -v ./cfg/*.conf "${HTTPD_CONFIGURATION_PATH}"
+      rm -rf ./cfg
+    fi
+  fi
+fi
+
+# Fix source directory permissions
+fix-permissions ./

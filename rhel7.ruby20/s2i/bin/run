@@ -7,9 +7,21 @@ function is_puma_installed() {
 
 set -e
 
+function check_number() {
+  if [[ ! "$2" =~ ^[0-9]+$ ]]; then
+    echo "$1 needs to be a non-negative number"
+    exit 1
+  fi
+}
+check_number PUMA_WORKERS     "${PUMA_WORKERS:-0}"
+check_number PUMA_MIN_THREADS "${PUMA_MIN_THREADS:-0}"
+check_number PUMA_MAX_THREADS "${PUMA_MAX_THREADS:-0}"
+
 export RACK_ENV=${RACK_ENV:-"production"}
 
 if is_puma_installed; then
+  export_vars=$(cgroup-limits) ; export $export_vars
+
   exec bundle exec "puma --config ../etc/puma.cfg"
 else
   echo "You might consider adding 'puma' into your Gemfile."
@@ -25,4 +37,3 @@ else
     echo "       Add rack to your Gemfile in order to start the web server."
   fi
 fi
-

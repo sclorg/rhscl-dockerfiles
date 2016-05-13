@@ -1,4 +1,4 @@
-FROM rhel7
+FROM rhel:7.2-released
 
 # PostgreSQL image for OpenShift.
 # Volumes:
@@ -21,9 +21,9 @@ LABEL io.k8s.description="PostgreSQL is an advanced Object-Relational database m
 
 # Labels consumed by Red Hat build service
 LABEL Name="rhscl/postgresql-94-rhel7" \
-      Version="9.4" \
-      Release="0.4" \
       BZComponent="rh-postgresql94-docker" \
+      Version="9.4" \
+      Release="6.3" \
       Architecture="x86_64"
 
 EXPOSE 5432
@@ -31,34 +31,39 @@ EXPOSE 5432
 # This image must forever use UID 26 for postgres user so our volumes are
 # safe in the future. This should *never* change, the last test is there
 # to make sure of that.
+# rhel-7-server-ose-3.0-rpms is enabled for nss_wrapper until this pkg is
+# in base RHEL
 RUN yum install -y yum-utils gettext && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum install -y --setopt=tsflags=nodocs bind-utils rh-postgresql94 && \
-    yum install -y --setopt=tsflags=nodocs nss_wrapper && \
+    yum-config-manager --enable rhel-7-server-ose-3.0-rpms && \
+    INSTALL_PKGS="rsync tar gettext bind-utils rh-postgresql94 rh-postgresql94-postgresql-contrib  nss_wrapper" && \
+    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum clean all && \
     localedef -f UTF-8 -i en_US en_US.UTF-8 && \
-    mkdir -p /var/lib/pgsql/data && chown postgres.postgres /var/lib/pgsql/data && \
-    test "$(id postgres)" = "uid=26(postgres) gid=26(postgres) groups=26(postgres)" && \
-    # Loosen permission bits to avoid problems running container with arbitrary UID
-    chmod -R a+rwx /var/run/postgresql
-
-COPY run-*.sh /usr/local/bin/
-COPY contrib /var/lib/pgsql/
+    mkdir -p /var/lib/pgsql/data && \
+    test "$(id postgres)" = "uid=26(postgres) gid=26(postgres) groups=26(postgres)"
 
 # Loosen permission bits to avoid problems running container with arbitrary UID
-RUN chmod -R a+rwx /var/lib/pgsql
+ADD root /
+RUN /usr/libexec/fix-permissions /var/lib/pgsql && \
+    /usr/libexec/fix-permissions /var/run/postgresql
+
+# Get prefix path and path to scripts rather than hard-code them in scripts
+ENV CONTAINER_SCRIPTS_PATH=/usr/share/container-scripts/postgresql \
+    ENABLED_COLLECTIONS=rh-postgresql94
 
 # When bash is started non-interactively, to run a shell script, for example it
 # looks for this variable and source the content of this file. This will enable
 # the SCL for all scripts without need to do 'scl enable'.
-ENV BASH_ENV=/var/lib/pgsql/scl_enable \
-    ENV=/var/lib/pgsql/scl_enable \
-    PROMPT_COMMAND=". /var/lib/pgsql/scl_enable"
+ENV BASH_ENV=${CONTAINER_SCRIPTS_PATH}/scl_enable \
+    ENV=${CONTAINER_SCRIPTS_PATH}/scl_enable \
+    PROMPT_COMMAND=". ${CONTAINER_SCRIPTS_PATH}/scl_enable"
 
 VOLUME ["/var/lib/pgsql/data"]
 
 USER 26
 
-ENTRYPOINT ["run-postgresql.sh"]
-CMD ["postgres"]
+ENTRYPOINT ["container-entrypoint"]
+CMD ["run-postgresql"]

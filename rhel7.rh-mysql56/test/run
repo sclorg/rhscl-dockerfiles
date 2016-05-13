@@ -6,25 +6,31 @@
 # The image has to be available before this script is executed.
 #
 
-set -exo nounset
+set -o errexit
+set -o nounset
 shopt -s nullglob
 
-IMAGE_NAME=${IMAGE_NAME-centos/mysql-56-centos7-candidate}
+IMAGE_NAME=${IMAGE_NAME-openshift/mysql-56-centos7-candidate}
 
 CIDFILE_DIR=$(mktemp --suffix=mysql_test_cidfiles -d)
 
 function cleanup() {
+  local cidfile
   for cidfile in $CIDFILE_DIR/* ; do
+    local CONTAINER
     CONTAINER=$(cat $cidfile)
 
     echo "Stopping and removing container $CONTAINER..."
-    docker stop $CONTAINER
+    docker stop $CONTAINER >/dev/null
+    local exit_status
     exit_status=$(docker inspect -f '{{.State.ExitCode}}' $CONTAINER)
     if [ "$exit_status" != "0" ]; then
+      echo "Inspecting container $CONTAINER"
+      docker inspect $CONTAINER
       echo "Dumping logs for $CONTAINER"
       docker logs $CONTAINER
     fi
-    docker rm $CONTAINER
+    docker rm -v $CONTAINER >/dev/null
     rm $cidfile
     echo "Done."
   done
@@ -43,22 +49,25 @@ function get_container_ip() {
 }
 
 function mysql_cmd() {
-  docker run --rm $IMAGE_NAME mysql --host $CONTAINER_IP -u$USER -p"$PASS" "$@" db
+  local container_ip="$1"; shift
+  local login="$1"; shift
+  local password="$1"; shift
+  docker run --rm "$IMAGE_NAME" mysql --host "$container_ip" -u"$login" -p"$password" "$@" db
 }
 
 function test_connection() {
   local name=$1 ; shift
+  local login=$1 ; shift
+  local password=$1 ; shift
+  local ip
   ip=$(get_container_ip $name)
   echo "  Testing MySQL connection to $ip..."
   local max_attempts=20
   local sleep_time=2
+  local i
   for i in $(seq $max_attempts); do
     echo "    Trying to connect..."
-    set +e
-    mysql_cmd <<< "SELECT 1;"
-    status=$?
-    set -e
-    if [ $status -eq 0 ]; then
+    if mysql_cmd "$ip" "$login" "$password" <<< 'SELECT 1;'; then
       echo "  Success!"
       return 0
     fi
@@ -70,13 +79,17 @@ function test_connection() {
 }
 
 function test_mysql() {
+  local container_ip="$1"
+  local login="$2"
+  local password="$3"
+
   echo "  Testing MySQL"
-  mysql_cmd <<< "CREATE TABLE tbl (col1 VARCHAR(20), col2 VARCHAR(20));"
-  mysql_cmd <<< "INSERT INTO tbl VALUES ('foo1', 'bar1');"
-  mysql_cmd <<< "INSERT INTO tbl VALUES ('foo2', 'bar2');"
-  mysql_cmd <<< "INSERT INTO tbl VALUES ('foo3', 'bar3');"
-  mysql_cmd <<< "SELECT * FROM tbl;"
-  mysql_cmd <<< "DROP TABLE tbl;"
+  mysql_cmd "$container_ip" "$login" "$password" <<< 'CREATE TABLE tbl (col1 VARCHAR(20), col2 VARCHAR(20));'
+  mysql_cmd "$container_ip" "$login" "$password" <<< 'INSERT INTO tbl VALUES ("foo1", "bar1");'
+  mysql_cmd "$container_ip" "$login" "$password" <<< 'INSERT INTO tbl VALUES ("foo2", "bar2");'
+  mysql_cmd "$container_ip" "$login" "$password" <<< 'INSERT INTO tbl VALUES ("foo3", "bar3");'
+  mysql_cmd "$container_ip" "$login" "$password" <<< 'SELECT * FROM tbl;'
+  mysql_cmd "$container_ip" "$login" "$password" <<< 'DROP TABLE tbl;'
   echo "  Success!"
 }
 
@@ -84,8 +97,9 @@ function create_container() {
   local name=$1 ; shift
   cidfile="$CIDFILE_DIR/$name"
   # create container with a cidfile in a directory for cleanup
-  docker run ${DOCKER_ARGS:-} --cidfile $cidfile -d "$@" $IMAGE_NAME ${CONTAINER_ARGS:-}
-  echo "Created container $(cat $cidfile)"
+  local container_id
+  container_id="$(docker run ${DOCKER_ARGS:-} --cidfile $cidfile -d "$@" $IMAGE_NAME ${CONTAINER_ARGS:-})"
+  echo "Created container $container_id"
 }
 
 function run_change_password_test() {
@@ -95,19 +109,18 @@ function run_change_password_test() {
   # Create MySQL container with persistent volume and set the initial password
   create_container "testpass1" -e MYSQL_USER=user -e MYSQL_PASSWORD=foo \
     -e MYSQL_DATABASE=db -v ${tmpdir}:/var/lib/mysql/data:Z
-  CONTAINER_IP=$(get_container_ip testpass1) USER=user PASS=foo test_connection "testpass1"
-  docker stop $(get_cid testpass1)
+  test_connection testpass1 user foo
+  docker stop $(get_cid testpass1) >/dev/null
 
   # Create second container with changed password
   create_container "testpass2" -e MYSQL_USER=user -e MYSQL_PASSWORD=bar \
     -e MYSQL_DATABASE=db -v ${tmpdir}:/var/lib/mysql/data:Z
-  CONTAINER_IP=$(get_container_ip testpass2) USER=user PASS=bar test_connection "testpass2"
+  test_connection testpass2 user bar
 
   # The old password should not work anymore
-  set +e
-  CONTAINER_IP=$(get_container_ip testpass2) USER=user PASS=foo \
-    mysql_cmd -e "SELECT 1;" && return 1
-  set -e
+  if mysql_cmd "$(get_container_ip testpass2)" user foo -e 'SELECT 1;'; then
+    return 1
+  fi
 }
 
 function run_replication_test() {
@@ -117,23 +130,23 @@ function run_replication_test() {
   # Run the MySQL master
   docker run $cluster_args -e MYSQL_USER=user -e MYSQL_PASSWORD=foo \
     -e MYSQL_ROOT_PASSWORD=root \
-    -d --cidfile ${CIDFILE_DIR}/master.cid $IMAGE_NAME mysqld-master \
-    --innodb_buffer_pool_size=5242880
+    -e MYSQL_INNODB_BUFFER_POOL_SIZE=5M \
+    -d --cidfile ${CIDFILE_DIR}/master.cid $IMAGE_NAME mysqld-master >/dev/null
+  local master_ip
   master_ip=$(get_container_ip master.cid)
 
   # Run the MySQL slave
   docker run $cluster_args -e MYSQL_MASTER_SERVICE_NAME=${master_ip} \
-    -d --cidfile ${CIDFILE_DIR}/slave.cid $IMAGE_NAME mysqld-slave \
-    --innodb_buffer_pool_size=5242880
+    -e MYSQL_INNODB_BUFFER_POOL_SIZE=5M \
+    -d --cidfile ${CIDFILE_DIR}/slave.cid $IMAGE_NAME mysqld-slave >/dev/null
+  local slave_ip
   slave_ip=$(get_container_ip slave.cid)
 
   # Now wait till the MASTER will see the SLAVE
+  local i
   for i in $(seq $max_attempts); do
-    set +e
-    result=$(CONTAINER_IP=${master_ip} USER=root PASS=root \
-      mysql_cmd -e "SHOW SLAVE HOSTS;" | grep ${slave_ip})
-    set -e
-    if [[ ! -z "${result}" ]]; then
+    result="$(mysql_cmd "$master_ip" root root -e 'SHOW SLAVE HOSTS;' | grep "$slave_ip" || true)"
+    if [[ -n "${result}" ]]; then
       echo "${slave_ip} successfully registered as SLAVE for ${master_ip}"
       break
     fi
@@ -145,37 +158,15 @@ function run_replication_test() {
     fi
     sleep 1
   done
-
-  # do some real work to test replication in practice
-  CONTAINER_IP=${master_ip} USER=root PASS=root \
-    mysql_cmd -e "CREATE TABLE t1 (a INT); INSERT INTO t1 VALUES (24);"
-
-  # read value from slave and check whether it is expectd
-  for i in $(seq $max_attempts); do
-    set +e
-    result=$(CONTAINER_IP=${slave_ip} USER=root PASS=root \
-      mysql_cmd -e "select * from t1 \G" | grep -e ^a | grep 24)
-    set -e
-    if [[ ! -z "${result}" ]]; then
-      echo "${slave_ip} successfully got value from MASTER ${master_ip}"
-      break
-    fi
-    if [[ "${i}" == "${max_attempts}" ]]; then
-      echo "The ${slave_ip} failed to see value added on MASTER"
-      echo "Dumping logs for $(get_cid slave.cid)"
-      docker logs $(get_cid slave.cid)
-      return 1
-    fi
-    sleep 1
-  done
 }
 
 function assert_login_access() {
+  local container_ip=$1; shift
   local USER=$1 ; shift
   local PASS=$1 ; shift
   local success=$1 ; shift
 
-  if mysql_cmd <<<'SELECT 1;' ; then
+  if mysql_cmd "$container_ip" "$USER" "$PASS" <<< 'SELECT 1;' ; then
     if $success ; then
       echo "    $USER($PASS) access granted as expected"
       return
@@ -201,10 +192,8 @@ function assert_container_creation_fails() {
   # Time the docker run command. It should fail. If it doesn't fail,
   # mysqld will keep running so we kill it with SIGKILL to make sure
   # timeout returns a non-zero value.
-  set +e
-  timeout -s 9 --preserve-status 60s docker run --rm "$@" $IMAGE_NAME
-  ret=$?
-  set -e
+  local ret=0
+  timeout -s 9 --preserve-status 60s docker run --rm "$@" $IMAGE_NAME >/dev/null || ret=$?
 
   # Timeout will exit with a high number.
   if [ $ret -gt 30 ]; then
@@ -213,7 +202,6 @@ function assert_container_creation_fails() {
 }
 
 function try_image_invalid_combinations() {
-  assert_container_creation_fails -e MYSQL_USER=user -e MYSQL_PASSWORD=pass "$@"
   assert_container_creation_fails -e MYSQL_USER=user -e MYSQL_DATABASE=db "$@"
   assert_container_creation_fails -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db "$@"
 }
@@ -224,32 +212,109 @@ function run_container_creation_tests() {
   try_image_invalid_combinations
   try_image_invalid_combinations  -e MYSQL_ROOT_PASSWORD=root_pass
 
-  VERY_LONG_DB_NAME="very_long_database_name_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  local VERY_LONG_DB_NAME="very_long_database_name_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  assert_container_creation_fails -e MYSQL_USER=user -e MYSQL_PASSWORD=pass
   assert_container_creation_fails -e MYSQL_USER=\$invalid -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=root_pass
   assert_container_creation_fails -e MYSQL_USER=very_long_username -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=root_pass
   assert_container_creation_fails -e MYSQL_USER=user -e MYSQL_PASSWORD="\"" -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=root_pass
   assert_container_creation_fails -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=\$invalid -e MYSQL_ROOT_PASSWORD=root_pass
   assert_container_creation_fails -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=$VERY_LONG_DB_NAME -e MYSQL_ROOT_PASSWORD=root_pass
   assert_container_creation_fails -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD="\""
+  assert_container_creation_fails -e MYSQL_USER=root -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -e MYSQL_ROOT_PASSWORD=pass
   echo "  Success!"
 }
 
 function test_config_option() {
-  local env_var=$1 ; shift
-  local setting=$1 ; shift
-  local value=$1 ; shift
+  local container_name="$1"
+  local configuration="$2"
+  local option_name="$3"
+  local option_value="$4"
 
-  # If $value is a string, it needs to be in simple quotes ''.
-  # If nothing is found, grep returns 1 and test fails.
-  docker run --rm -e $env_var=${value//\'/} $IMAGE_NAME cat /var/lib/mysql/my.cnf | grep -q "$setting = $value"
+  if ! echo "$configuration" | grep -qx "$option_name[[:space:]]*=[[:space:]]*$option_value"; then
+    local configs="$(docker exec -t "$container_name" bash -c 'set +f; shopt -s nullglob; echo /etc/my.cnf /etc/my.cnf.d/* /opt/rh/mysql*/root/etc/my.cnf /opt/rh/mysql*/root/etc/my.cnf.d/* | paste -s')"
+    echo >&2 "FAIL: option '$option_name' should have value '$option_value', but it wasn't found in any of the configuration files ($configs):"
+    echo >&2
+    echo >&2 "$configuration"
+    echo >&2
+    return 1
+  fi
+
+  return 0
 }
 
 function run_configuration_tests() {
   echo "  Testing image configuration settings"
-  test_config_option MYSQL_LOWER_CASE_TABLE_NAMES lower_case_table_names 1
-  test_config_option MYSQL_MAX_CONNECTIONS max_connections 1337
-  test_config_option MYSQL_FT_MIN_WORD_LEN ft_min_word_len 8
-  test_config_option MYSQL_FT_MAX_WORD_LEN ft_max_word_len 15
+
+  local container_name=config_test
+
+  create_container \
+    "$container_name" \
+    --name "$container_name" \
+    --env MYSQL_USER=config_test_user \
+    --env MYSQL_PASSWORD=config_test \
+    --env MYSQL_DATABASE=db \
+    --env MYSQL_LOWER_CASE_TABLE_NAMES=1 \
+    --env MYSQL_MAX_CONNECTIONS=1337 \
+    --env MYSQL_FT_MIN_WORD_LEN=8 \
+    --env MYSQL_FT_MAX_WORD_LEN=15 \
+    --env MYSQL_MAX_ALLOWED_PACKET=10M \
+    --env MYSQL_TABLE_OPEN_CACHE=100 \
+    --env MYSQL_SORT_BUFFER_SIZE=256K \
+    --env MYSQL_KEY_BUFFER_SIZE=16M \
+    --env MYSQL_READ_BUFFER_SIZE=16M \
+    --env MYSQL_INNODB_BUFFER_POOL_SIZE=16M \
+    --env MYSQL_INNODB_LOG_FILE_SIZE=4M \
+    --env MYSQL_INNODB_LOG_BUFFER_SIZE=4M \
+    --env WORKAROUND_DOCKER_BUG_14203=
+    #
+
+  test_connection "$container_name" config_test_user config_test
+
+  # TODO: this check is far from perfect and could be improved:
+  # - we should look for an option in the desired config, not in all of them
+  # - we should respect section of the config (now we have duplicated options from a different sections)
+  local configuration
+  configuration="$(docker exec -t "$container_name" bash -c 'set +f; shopt -s nullglob; egrep -hv "^(#|\!|\[|$)" /etc/my.cnf /etc/my.cnf.d/* /opt/rh/mysql*/root/etc/my.cnf /opt/rh/mysql*/root/etc/my.cnf.d/*' | sed 's,\(^[[:space:]]\+\|[[:space:]]\+$\),,' | sort -u)"
+
+  test_config_option "$container_name" "$configuration" lower_case_table_names 1
+  test_config_option "$container_name" "$configuration" max_connections 1337
+  test_config_option "$container_name" "$configuration" ft_min_word_len 8
+  test_config_option "$container_name" "$configuration" ft_max_word_len 15
+  test_config_option "$container_name" "$configuration" max_allowed_packet 10M
+  test_config_option "$container_name" "$configuration" table_open_cache 100
+  test_config_option "$container_name" "$configuration" sort_buffer_size 256K
+  test_config_option "$container_name" "$configuration" key_buffer_size 16M
+  test_config_option "$container_name" "$configuration" read_buffer_size 16M
+  test_config_option "$container_name" "$configuration" innodb_buffer_pool_size 16M
+  test_config_option "$container_name" "$configuration" innodb_log_file_size 4M
+  test_config_option "$container_name" "$configuration" innodb_log_buffer_size 4M
+
+  docker stop "$container_name" >/dev/null
+
+  echo "  Success!"
+  echo "  Testing image auto-calculated configuration settings"
+
+  container_name=dynamic_config_test
+
+  DOCKER_ARGS='--memory=256m' create_container \
+    "$container_name" \
+    --name "$container_name" \
+    --env MYSQL_USER=config_test_user \
+    --env MYSQL_PASSWORD=config_test \
+    --env MYSQL_DATABASE=db
+
+  test_connection "$container_name" config_test_user config_test
+
+  configuration="$(docker exec -t "$container_name" bash -c 'set +f; shopt -s nullglob; egrep -hv "^(#|\!|\[|$)" /etc/my.cnf /etc/my.cnf.d/* /opt/rh/mysql*/root/etc/my.cnf /opt/rh/mysql*/root/etc/my.cnf.d/*' | sed 's,\(^[[:space:]]\+\|[[:space:]]\+$\),,' | sort -u)"
+
+  test_config_option "$container_name" "$configuration" key_buffer_size 25M
+  test_config_option "$container_name" "$configuration" read_buffer_size 12M
+  test_config_option "$container_name" "$configuration" innodb_buffer_pool_size 128M
+  test_config_option "$container_name" "$configuration" innodb_log_file_size 38M
+  test_config_option "$container_name" "$configuration" innodb_log_buffer_size 38M
+
+  docker stop "$container_name" >/dev/null
+
   echo "  Success!"
 }
 
@@ -259,6 +324,7 @@ test_scl_usage() {
   local expected="$3"
 
   echo "  Testing the image SCL enable"
+  local out
   out=$(docker run --rm ${IMAGE_NAME} /bin/bash -c "${run_cmd}")
   if ! echo "${out}" | grep -q "${expected}"; then
     echo "ERROR[/bin/bash -c "${run_cmd}"] Expected '${expected}', got '${out}'"
@@ -283,33 +349,31 @@ function run_tests() {
     envs="$envs -e MYSQL_ROOT_PASSWORD=$ROOT_PASS"
   fi
   create_container $name $envs
-  CONTAINER_IP=$(get_container_ip $name)
-  test_connection $name
+  test_connection "$name" "$USER" "$PASS"
   echo "  Testing scl usage"
   test_scl_usage $name 'mysql --version' '5.6'
   echo "  Testing login accesses"
-  assert_login_access $USER $PASS true
-  assert_login_access $USER "${PASS}_foo" false
+  local container_ip
+  container_ip=$(get_container_ip $name)
+  assert_login_access "$container_ip" "$USER" "$PASS" true
+  assert_login_access "$container_ip" "$USER" "${PASS}_foo" false
   if [ -v ROOT_PASS ]; then
-    assert_login_access root $ROOT_PASS true
-    assert_login_access root "${ROOT_PASS}_foo" false
+    assert_login_access "$container_ip" root "$ROOT_PASS" true
+    assert_login_access "$container_ip" root "${ROOT_PASS}_foo" false
   else
-    assert_login_access root "foo" false
-    assert_login_access root "" false
+    assert_login_access "$container_ip" root 'foo' false
+    assert_login_access "$container_ip" root '' false
   fi
-  assert_local_access $name
+  assert_local_access "$name"
   echo "  Success!"
-  test_mysql $name
+  test_mysql "$container_ip" "$USER" "$PASS"
 }
 
 # Tests.
 
 run_container_creation_tests
 
-# FIXME: Disabled because the configuration files are not processed when running
-#        commands like 'cat'. To have the my.cnf processed you have to run one of the
-#        valid entrypoints.
-# run_configuration_tests
+run_configuration_tests
 
 # Set lower buffer pool size to avoid running out of memory.
 export CONTAINER_ARGS="run-mysqld --innodb_buffer_pool_size=5242880"

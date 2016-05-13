@@ -1,4 +1,4 @@
-FROM rhel7.2
+FROM rhel:7.2-released
 
 # MariaDB image for OpenShift.
 #
@@ -13,7 +13,8 @@ FROM rhel7.2
 ENV MYSQL_VERSION=10.0 \
     HOME=/var/lib/mysql
 
-LABEL io.k8s.description="MariaDB is a multi-user, multi-threaded SQL database server" \
+LABEL summary="MariaDB is a multi-user, multi-threaded SQL database server" \
+      io.k8s.description="MariaDB is a multi-user, multi-threaded SQL database server" \
       io.k8s.display-name="MariaDB 10.0" \
       io.openshift.expose-services="3306:mysql" \
       io.openshift.tags="database,mysql,mariadb,mariadb100,rh-mariadb100"
@@ -22,7 +23,7 @@ LABEL io.k8s.description="MariaDB is a multi-user, multi-threaded SQL database s
 LABEL BZComponent="rh-mariadb100-docker" \
       Name="rhscl/mariadb-100-rhel7" \
       Version="10.0" \
-      Release="10" \
+      Release="13.3" \
       Architecture="x86_64"
 
 EXPOSE 3306
@@ -33,7 +34,9 @@ EXPOSE 3306
 RUN yum install -y yum-utils gettext hostname && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum install -y --setopt=tsflags=nodocs bind-utils rh-mariadb100 && \
+    INSTALL_PKGS="rsync tar gettext hostname bind-utils rh-mariadb100" && \
+    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum clean all && \
     mkdir -p /var/lib/mysql/data && chown -R mysql.0 /var/lib/mysql && \
     test "$(id mysql)" = "uid=27(mysql) gid=27(mysql) groups=27(mysql)"

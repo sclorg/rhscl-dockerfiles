@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+echo "---> Copying varnish configuration files..."
+rm -rf "${VARNISH_CONFIGURATION_PATH}/default.vcl"
+cp -Rfv /tmp/src/. "${VARNISH_CONFIGURATION_PATH}"
+
+if [ ! -f "${VARNISH_CONFIGURATION_PATH}/default.vcl" ]; then
+    echo "Error: The varnish configuration must contain 'default.vcl' file."
+    exit 1
+fi
+
+cat "${VARNISH_CONFIGURATION_PATH}/default.vcl"
+
+# Fix source directory permissions
+fix-permissions ./
+fix-permissions ${VARNISH_CONFIGURATION_PATH}

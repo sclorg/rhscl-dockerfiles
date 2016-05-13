@@ -21,6 +21,36 @@ else
   export ENABLE_CPAN_TEST="--notest"
 fi
 
+# Configure mod_perl for PSGI.
+# If PSGI_FILE variable is set but empty, skip it.
+# If PSGI_FILE is set and non-empty, use it.
+# If PSGI_FILE does not exist, check if exactly one ./*.psgi file exists and
+# use that file.
+# If PSGI_URI_PATH variable has a value, use it as a location. Default is "/".
+if [ ! -n "${PSGI_FILE+true}" ]; then
+    PSGI_FILE=$(find -maxdepth 1 -name '*.psgi' -type f)
+fi
+PSGI_FILE_NUMBER=$(printf '%s' "$PSGI_FILE" | wc -l)
+if [ -n "$PSGI_FILE" -a "$PSGI_FILE_NUMBER" -eq 0 ]; then
+    echo "---> PSGI application found in $PSGI_FILE"
+    cat >> cpanfile <<"EOF"
+requires 'Plack::Handler::Apache2';
+EOF
+    # XXX: Escape PSGI_FILE value against httpd control characters
+    PSGI_FILE=$(printf '%s' "$PSGI_FILE" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+    cat > /opt/app-root/etc/httpd.d/40-psgi.conf <<EOF
+<Location ${PSGI_URI_PATH:=/}>
+    SetHandler perl-script
+    PerlResponseHandler Plack::Handler::Apache2
+    PerlSetVar psgi_app "$PSGI_FILE"
+</Location>
+EOF
+elif [ "$PSGI_FILE_NUMBER" -gt 0 ]; then
+    echo "---> Multiple PSGI applications found:"
+    printf '%s' "$PSGI_FILE"
+    echo "---> Skipping PSGI autoconfiguration!"
+fi
+
 # Installing dependencies with cpanfile
 if [ -f "cpanfile" ]; then
   # Install cpanm
@@ -34,3 +64,6 @@ if [ -f "cpanfile" ]; then
 else
   echo "---> No cpanfile found, nothing to install"
 fi
+
+# Fix source directory permissions
+fix-permissions ./

@@ -1,1 +1,1 @@
-This image was pulled from https://github.com/openshift/postgresql.git (subdirectory 9.2).
+This image was pulled from git://internal-url-hidden/rpms/openshift-postgresql-docker (subdirectory .).

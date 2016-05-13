@@ -1,4 +1,4 @@
-FROM rhel7.2
+FROM rhel:7.2-released
 
 # MySQL image for OpenShift.
 #
@@ -13,16 +13,17 @@ FROM rhel7.2
 ENV MYSQL_VERSION=5.5 \
     HOME=/var/lib/mysql
 
-LABEL io.k8s.description="MySQL is a multi-user, multi-threaded SQL database server" \
+LABEL summary="MySQL is a multi-user, multi-threaded SQL database server" \
+      io.k8s.description="MySQL is a multi-user, multi-threaded SQL database server" \
       io.k8s.display-name="MySQL 5.5" \
       io.openshift.expose-services="3306:mysql" \
       io.openshift.tags="database,mysql,mysql55"
 
 # Labels consumed by Red Hat build service
-LABEL BZComponent="mysql55-docker" \
+LABEL BZComponent="openshift-mysql-docker" \
       Name="openshift3/mysql-55-rhel7" \
       Version="5.5" \
-      Release="1" \
+      Release="25" \
       Architecture="x86_64"
 
 EXPOSE 3306
@@ -30,10 +31,12 @@ EXPOSE 3306
 # This image must forever use UID 27 for mysql user so our volumes are
 # safe in the future. This should *never* change, the last test is there
 # to make sure of that.
-RUN yum install -y yum-utils gettext hostname && \
+RUN yum install -y yum-utils && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum install -y --setopt=tsflags=nodocs bind-utils mysql55 && \
+    INSTALL_PKGS="rsync tar gettext hostname bind-utils mysql55" && \
+    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum clean all && \
     mkdir -p /var/lib/mysql/data && chown -R mysql.0 /var/lib/mysql && \
     test "$(id mysql)" = "uid=27(mysql) gid=27(mysql) groups=27(mysql)"

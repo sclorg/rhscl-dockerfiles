@@ -23,9 +23,6 @@ if [[ -f setup.py ]]; then
   python setup.py develop --user
 fi
 
-# set permissions for any installed artifacts
-chmod -R og+rwx /opt/app-root
-
 if should_collectstatic; then
   (
     echo "---> Collecting Django static files ..."
@@ -49,6 +46,11 @@ if should_collectstatic; then
     python $manage_file collectstatic --noinput
   )
 fi
+
+# Fix source directory permissions
+fix-permissions ./
+# set permissions for any installed artifacts
+fix-permissions /opt/app-root
 
 # remove pip temporary directory
 rm -rf /tmp/pip_build_default

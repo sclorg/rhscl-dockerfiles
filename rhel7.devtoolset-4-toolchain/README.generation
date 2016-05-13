@@ -1,1 +1,1 @@
-This image was generated from https://github.com/sclorg/rhscl2dockerfile.git (subdirectory rhel7.devtoolset-4-toolchain).
+This image was pulled from git://internal-url-hidden/rpms/devtoolset-4-toolchain-docker (subdirectory .).

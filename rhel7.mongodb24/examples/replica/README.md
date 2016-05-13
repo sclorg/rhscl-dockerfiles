@@ -65,12 +65,17 @@ replica set, all of them have default values.
 * `MONGODB_REPLICA_NAME` - name of the replica set (default: `rs0`).
 * `MONGODB_SERVICE_NAME` - name of the MongoDB service (default: `mongodb`, used by DNS lookup).
 * `MONGODB_ADMIN_PASSWORD` - password for the `admin` user (roles: 'dbAdminAnyDatabase', 'userAdminAnyDatabase', 'readWriteAnyDatabase', 'clusterAdmin') (default: *generated*).
-* `MONGODB_DATABASE` - name of the database (default: `userdb`)
+* `MONGODB_DATABASE` - name of the database (default: `sampledb`)
 * `MONGODB_USER` - the name of the regular MongoDB user (roles: 'readWrite' for `$MONGODB_DATABASE`) (default: *generated*).
 * `MONGODB_PASSWORD` - the regular MongoDB user password (default: *generated*).
 * `MONGODB_KEYFILE_VALUE` - value for '[keyFile](http://docs.mongodb.org/v2.4/tutorial/generate-key-file/)' file that MongoDB members use for authorization internally (default: *generated*).
 
 The patterns for generated values are defined in the template parameters.
+
+Script that is used in post-deployment hook accepts optional `MONGODB_INITIAL_REPLICA_COUNT` parameter.
+It should be set to initial number of members in replica set. We are recommending to always set this
+parameter. Its value will be used in the beggining of post-deployment hook execution and specifies of
+how many members script will wait before initilizing replica set.
 
 ## Teardown
 

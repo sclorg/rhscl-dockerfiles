@@ -1,4 +1,4 @@
-FROM rhel7.1
+FROM rhel:7.2-released
 
 LABEL io.k8s.description="Platform for building and running Ruby on Rails 4.1 applications" \
       io.k8s.display-name="Ruby on Rails 4.1"
@@ -7,7 +7,7 @@ LABEL io.k8s.description="Platform for building and running Ruby on Rails 4.1 ap
 LABEL BZComponent="rh-ror41-docker" \
       Name="rhscl/ror-41-rhel7" \
       Version="4.1" \
-      Release="8" \
+      Release="13.4" \
       Architecture="x86_64"
 
 # The following is taken from STI base image so this Dockerfile follows the same convetions.
@@ -25,8 +25,6 @@ ENV BASH_ENV=/opt/app-root/etc/scl_enable \
 RUN yum install -y --setopt=tsflags=nodocs \
   autoconf \
   automake \
-  bsdtar \
-  epel-release \
   findutils \
   gcc-c++ \
   gdb \

@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+. ../utils.sh
+
+IMAGE_NAME="${IMAGE_NAME:-rhscl_beta/ror-42-rhel7-candidate}"
+
+function create_container() {
+    local name=$1 ; shift
+    cidfile="$CIDFILE_DIR/$name"
+    # create container with a cidfile in a directory for cleanup
+    eval docker run ${DOCKER_ARGS:-} --cidfile $cidfile -d $IMAGE_NAME $CONTAINER_ARGS || return 1
+    echo "Created container $(cat $cidfile)"
+}
+
+function update_overall {
+    res="$1"
+    if [ "$res" != 0 ]; then
+        overall="$res"
+    fi
+}
+
+function get_cid() {
+  local id="$1" ; shift || return 1
+  echo $(cat "$CIDFILE_DIR/$id")
+}
+
+function rm_container {
+    local name="$1"
+    local cid="`get_cid $name`"
+    docker kill "$cid"
+    docker rm "$cid"
+    rm -f "$CIDFILE_DIR/$name"
+}
+
+function run {
+    cmd="$1"
+    expected_res="${2:-0}"
+    msg="${3:-Running command '$cmd'}"
+    run_command "$cmd" "$expected_res" "$msg"
+    res=$?
+    update_overall $res
+    return $res
+}
+
+tmpdir="`mktemp -d`"
+pushd $tmpdir > /dev/null || exit 1
+overall=0
+CIDFILE_DIR="$tmpdir/cidfiles"
+mkdir $CIDFILE_DIR || exit 1
+
+run "docker pull $IMAGE_NAME"
+
+# Ruby, Rails and Node.js have to be present and directly available:
+run "docker run --rm $IMAGE_NAME /bin/bash -c 'ruby -v' > output"
+run "fgrep 'ruby 2.3' output"
+run "docker run --rm $IMAGE_NAME /bin/bash -c 'rails -v' > output"
+run "fgrep 'Rails 4.2' output"
+run "docker run --rm $IMAGE_NAME /bin/bash -c 'node -v' > output"
+run "fgrep 'v4.' output"
+
+# Check Rails welcome page
+CONTAINER_ARGS="bash -c 'rails new myapp && cd myapp && rails s -b 0.0.0.0 -p 8080'"
+DOCKER_ARGS='-p 8080:8080'
+run "create_container test_welcome_page"
+CONTAINER_ARGS=
+DOCKER_ARGS=
+for i in `seq 10`; do
+    sleep 5
+    run 'curl localhost:8080 > output'
+    res=$?
+    run "fgrep 'Ruby on Rails: Welcome aboard' output"
+    test $res = 0 && break
+done
+rm_container test_welcome_page
+
+# Check asset precompilation works
+CONTAINER_ARGS="bash -c 'rails new myapp && cd myapp && rake assets:precompile'"
+run "docker run --rm $IMAGE_NAME $CONTAINER_ARGS"
+
+popd > /dev/null
+rm -Rf "$tmpdir"
+exit $overall

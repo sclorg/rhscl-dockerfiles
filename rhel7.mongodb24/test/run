@@ -47,13 +47,13 @@ function mongo_admin_cmd() {
 
 function mongo_cmd_local() {
     local name="$1" ; shift
-    docker exec -i $(get_cid $name) bash -c mongo "$@"
+    docker exec $(get_cid $name) bash -c mongo "$@"
 }
 
 function test_connection() {
     local name=$1 ; shift
-    ip=$(get_container_ip $name)
-    echo "  Testing MongoDB connection to $ip..."
+    CONTAINER_IP=$(get_container_ip $name)
+    echo "  Testing MongoDB connection to $CONTAINER_IP..."
     local max_attempts=20
     local sleep_time=2
     for i in $(seq $max_attempts); do
@@ -120,9 +120,29 @@ function test_config_option() {
     local setting=$1 ; shift
     local value=$1 ; shift
 
+    local name="configuration_${setting}"
+
     # If $value is a string, it needs to be in simple quotes ''.
+    DOCKER_ARGS="
+-e MONGODB_DATABASE=db
+-e MONGODB_USER=user
+-e MONGODB_PASSWORD=password
+-e MONGODB_ADMIN_PASSWORD=adminPassword
+-e $env_var=${value//\'/}
+"
+    create_container ${name} ${DOCKER_ARGS}
+
+    # need to set these because `mongo_cmd` relies on global variables
+    USER=user
+    PASS=password
+    DB=db
+
+    test_connection ${name}
+
     # If nothing is found, grep returns 1 and test fails.
-    docker run --rm -e $env_var=${value//\'/} $IMAGE_NAME cat /var/lib/mongodb/mongodb.conf | grep -q "$setting = $value"
+    docker exec $(get_cid $name) bash -c "cat /etc/mongod.conf" | grep -q "$setting = $value"
+
+    docker stop $(get_cid ${name})
 }
 
 function run_configuration_tests() {
@@ -133,13 +153,27 @@ function run_configuration_tests() {
     echo "  Success!"
 }
 
+wait_for_cid() {
+  local max_attempts=10
+  local sleep_time=1
+  local attempt=1
+  local result=1
+  while [ $attempt -le $max_attempts ]; do
+    [ -f $cid_file ] && [ -s $cid_file ] && break
+    echo "Waiting for container start..."
+    attempt=$(( $attempt + 1 ))
+    sleep $sleep_time
+  done
+}
+
 function create_container() {
     local name=$1 ; shift
     local cargs=${CONTAINER_ARGS:-}
-    cidfile="$CIDFILE_DIR/$name"
+    cid_file="$CIDFILE_DIR/$name"
     # create container with a cidfile in a directory for cleanup
-    docker run --cidfile $cidfile -d $cargs "$@" $IMAGE_NAME
-    echo "Created container $(cat $cidfile)"
+    docker run --cidfile $cid_file -d $cargs "$@" $IMAGE_NAME
+    echo "Created container $(cat $cid_file)"
+    wait_for_cid
 }
 
 function assert_login_access() {
@@ -194,7 +228,7 @@ function run_change_password_test() {
 -e MONGODB_USER=${user}
 -e MONGODB_PASSWORD=${password}
 -e MONGODB_ADMIN_PASSWORD=${admin_password}
--v ${volume_dir}:/var/lib/mongodb/data
+-v ${volume_dir}:/var/lib/mongodb/data:Z
 "
     create_container ${name} ${DOCKER_ARGS}
 
@@ -220,7 +254,7 @@ function run_change_password_test() {
 -e MONGODB_USER=${user}
 -e MONGODB_PASSWORD=NEW_${password}
 -e MONGODB_ADMIN_PASSWORD=NEW_${admin_password}
--v ${volume_dir}:/var/lib/mongodb/data
+-v ${volume_dir}:/var/lib/mongodb/data:Z
 "
     create_container "${name}_NEW" ${DOCKER_ARGS}
 

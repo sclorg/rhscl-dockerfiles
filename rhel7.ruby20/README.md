@@ -104,6 +104,14 @@ file inside your source code repository.
     This variable set to `true` indicates that the asset compilation process will be skipped. Since this only takes place
     when the application is run in the `production` environment, it should only be used when assets are already compiled.
 
+* **PUMA_MIN_THREADS**, **PUMA_MAX_THREADS**
+
+    These variables indicate the minimum and maximum threads that will be available in [Puma](https://github.com/puma/puma)'s thread pool.
+
+* **PUMA_WORKERS**
+
+    This variable indicate the number of worker processes that will be launched. See documentation on Puma's [clustered mode](https://github.com/puma/puma#clustered-mode).
+
 Hot deploy
 ---------------------
 In order to dynamically pick up changes made in your application source code, you need to make following steps:
@@ -135,3 +143,33 @@ docker exec -it <CONTAINER_ID> /bin/bash
 
 After you [Docker exec](http://docker.io) into the running container, your current
 directory is set to `/opt/app-root/src`, where the source code is located.
+
+Performance tuning
+---------------------
+You can tune the number of threads per worker using the
+`PUMA_MIN_THREADS` and `PUMA_MAX_THREADS` environment variables.
+Additionally, the number of worker processes is determined by the number of CPU
+cores that the container has available, as recommended by
+[Puma](https://github.com/puma/puma)'s documentation. This is determined using
+the cgroup [cpusets](https://www.kernel.org/doc/Documentation/cgroup-v1/cpusets.txt)
+subsystem. You can specify the cores that the container is allowed to use by passing
+the `--cpuset-cpus` parameter to the [Docker](http://docker.io) run command:
+```
+$ docker run -e PUMA_MAX_THREADS=32 --cpuset-cpus='0-2,3,5' -p 8080:8080 sinatra-app
+```
+The number of workers is also limited by the memory limit that is enforced using
+cgroups. The builder image assumes that you will need 50 MiB as a base and
+another 15 MiB for every worker process plus 128 KiB for each thread. Note that
+each worker has its own threads, so the total memory required for the whole
+container is computed using the following formula:
+
+```
+50 + 15 * WORKERS + 0.125 * WORKERS * PUMA_MAX_THREADS
+```
+You can specify a memory limit using the `--memory` flag:
+```
+$ docker run -e PUMA_MAX_THREADS=32 --memory=300m -p 8080:8080 sinatra-app
+```
+If memory is more limiting then the number of available cores, the number of
+workers is scaled down accordingly to fit the above formula. The number of
+workers can also be set explicitly by setting `PUMA_WORKERS`.

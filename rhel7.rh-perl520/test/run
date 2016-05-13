@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # The 'run' performs a simple test that verifies that S2I image.
-# The main focus here is to excersise the S2I scripts.
+# The main focus here is to exercise the S2I scripts.
 #
 # IMAGE_NAME specifies a name of the candidate image used for testing.
 # The image has to be available before this script is executed.
@@ -32,7 +32,7 @@ container_ip() {
 }
 
 run_s2i_build() {
-  s2i build ${s2i_args} file://${test_dir}/sample-test-app ${IMAGE_NAME} ${IMAGE_NAME}-testapp
+  s2i build "$@" file://${test_dir}/${test_name} ${IMAGE_NAME} ${IMAGE_NAME}-testapp
 }
 
 prepare() {
@@ -43,7 +43,7 @@ prepare() {
   # TODO: S2I build require the application is a valid 'GIT' repository, we
   # should remove this restriction in the future when a file:// is used.
   info "Build the test application image"
-  pushd ${test_dir}/sample-test-app >/dev/null
+  pushd ${test_dir}/${test_name} >/dev/null
   git init
   git config user.email "build@localhost" && git config user.name "builder"
   git add -A && git commit -m "Sample commit"
@@ -70,7 +70,7 @@ cleanup() {
   if image_exists ${IMAGE_NAME}-testapp; then
     docker rmi -f ${IMAGE_NAME}-testapp
   fi
-  rm -rf ${test_dir}/sample-test-app/.git
+  rm -rf ${test_dir}/${test_name}/.git
 }
 
 check_result() {
@@ -115,21 +115,6 @@ test_scl_usage() {
     echo "ERROR[/bin/bash -c "${run_cmd}"] Expected '${expected}', got '${out}'"
     return 1
   fi
-  # out=$(docker run --rm -i ${IMAGE_NAME} /bin/bash -i <<< "${run_cmd}")
-  # if ! echo "${out}" | grep -q "${expected}"; then
-  #   echo "ERROR[-i /bin/bash -c "${run_cmd}"] Expected '${expected}', got '${out}'"
-  #   return 1
-  # fi
-  # out=$(docker run --rm -i ${IMAGE_NAME} /bin/bash -l <<< "${run_cmd}")
-  # if ! echo "${out}" | grep -q "${expected}"; then
-  #   echo "ERROR[-i /bin/bash -l "${run_cmd}"] Expected '${expected}', got '${out}'"
-  #   return 1
-  # fi
-  # out=$(docker run --rm -i ${IMAGE_NAME} /bin/sh -ic "${run_cmd}")
-  # if ! echo "${out}" | grep -q "${expected}"; then
-  #   echo "ERROR[/bin/sh -c "${run_cmd}"] Expected '${expected}', got '${out}'"
-  #   return 1
-  # fi
   out=$(docker exec $(cat ${cid_file}) /bin/bash -c "${run_cmd}" 2>&1)
   if ! echo "${out}" | grep -q "${expected}"; then
     echo "ERROR[exec /bin/bash -c "${run_cmd}"] Expected '${expected}', got '${out}'"
@@ -142,25 +127,61 @@ test_scl_usage() {
   fi
 }
 
-test_connection() {
-  info "Testing the HTTP connection (http://$(container_ip):${test_port})"
+# Perform GET request to the application container.
+# First argument is request URI path.
+# Second argument is expected HTTP response code.
+# Third argument is PCRE regular expression that must match the response body.
+test_response() {
+  local uri_path="$1"
+  local expected_code="$2"
+  local body_regexp="$3"
+
+  local url="http://$(container_ip):${test_port}${uri_path}"
+  info "Testing the HTTP response for <${url}>"
   local max_attempts=10
   local sleep_time=1
   local attempt=1
   local result=1
   while [ $attempt -le $max_attempts ]; do
-    response_code=$(curl -s -w %{http_code} -o /dev/null http://$(container_ip):${test_port}/)
+    response=$(curl -s -w '%{http_code}' "${url}")
     status=$?
     if [ $status -eq 0 ]; then
-      if [ $response_code -eq 200 ]; then
+      response_code=$(printf '%s' "$response" | tail -c 3)
+      response_body=$(printf '%s' "$response" | head -c -3)
+      if [ "$response_code" -eq "$expected_code" ]; then
         result=0
       fi
+      printf '%s' "$response_body" | grep -qP -e "$body_regexp" || result=1;
       break
     fi
     attempt=$(( $attempt + 1 ))
     sleep $sleep_time
   done
   return $result
+}
+
+# Match PCRE regular expression against container standard output.
+# First argument is the PCRE regular expression.
+# It expects standard output in ${tmp_dir}/out file.
+test_stdout() {
+  local regexp="$1"
+  local output="${tmp_dir}/out"
+  info "Testing the container standard output for /${regexp}/"
+  grep -qP -e "$regexp" "$output";
+}
+
+# Match PCRE regular expression against container standard error output.
+# First argument is the PCRE regular expression.
+# It expects error output in ${tmp_dir}/err file.
+test_stderr() {
+  local regexp="$1"
+  local output="${tmp_dir}/err"
+  info "Testing the container error output for /${regexp}/"
+  grep -qP -e "$regexp" "$output";
+}
+
+test_connection() {
+    test_response '/' 200 ''
 }
 
 test_application() {
@@ -178,31 +199,109 @@ test_application() {
   cleanup_test_app
 }
 
-cid_file=$(mktemp -u --suffix=.cid)
+# Build application, run it, perform test function, clean up.
+# First argument is directory name.
+# Second argument is function that expects running application. The function
+# must return (or terminate with) non-zero value to report an failure,
+# 0 otherwise.
+# Third argument is s2i --env argument value.
+# The test function have available container ID in $cid_file, container output
+# in ${tmp_dir}/out, container stderr in ${tmp_dir}/err.
+do_test() {
+    test_name="$1"
+    test_function="$2"
+    test_environment="$3"
 
-# Since we built the candidate image locally, we don't want S2I attempt to pull
-# it from Docker hub
-s2i_args="--force-pull=false"
+    info "Starting tests for ${test_name}."
 
-prepare
-run_s2i_build
-check_result $?
+    tmp_dir=$(mktemp -d)
+    check_result $?
+    cid_file="${tmp_dir}/cid"
+    s2i_args="--force-pull=false"
 
-# Verify the 'usage' script is working properly when running the base image with 's2i usage ...'
-test_s2i_usage
-check_result $?
+    # Build and run the test application
+    prepare
+    run_s2i_build $s2i_args --env="$test_environment"
+    check_result $?
+    run_test_application >"${tmp_dir}/out" 2>"${tmp_dir}/err" &
+    wait_for_cid
 
-# Verify the 'usage' script is working properly when running the base image with 'docker run ...'
-test_docker_run_usage
-check_result $?
+    # Perform user-supplied test function
+    $test_function;
+    check_result $?
 
-# Test application with default uid
-test_application
+    # Terminate the test application and clean up
+    cleanup_test_app
+    cleanup
+    rm -rf "$tmp_dir"
+    info "All tests for the ${test_name} finished successfully."
+}
 
-# Test application with random uid
-CONTAINER_ARGS="-u 12345" test_application
 
-info "All tests for the sample-test-app finished successfully."
-cleanup
+# List of tests to execute:
+
+# This is original test that does more things like s2i API checks. Other tests
+# executed by do_test() will not repeat these checks.
+test_1() {
+    test_name='sample-test-app'
+    info "Starting tests for ${test_name}"
+
+    cid_file=$(mktemp -u --suffix=.cid)
+
+    # Since we built the candidate image locally, we don't want S2I attempt to pull
+    # it from Docker hub
+    s2i_args="--force-pull=false"
+
+    prepare
+    run_s2i_build $s2i_args
+    check_result $?
+
+    # Verify the 'usage' script is working properly when running the base image with 's2i usage ...'
+    test_s2i_usage
+    check_result $?
+
+    # Verify the 'usage' script is working properly when running the base image with 'docker run ...'
+    test_docker_run_usage
+    check_result $?
+
+    # Test application with default UID
+    test_application
+
+    # Test application with random UID
+    CONTAINER_ARGS="-u 12345" test_application
+
+    info "All tests for the ${test_name} finished successfully."
+    cleanup
+}
+test_1
+
+# Check scripts installed from CPAN are available to the application.
+test_2_function() {
+    test_response '/' 200 'Usage'
+}
+do_test 'binpath' 'test_2_function'
+
+# Check a single PSGI application is recognized a mod_perl is autoconfigured.
+test_3_function() {
+    test_response '/' 200 '<title>Web::Paste::Simple'
+}
+do_test 'psgi' 'test_3_function'
+
+# Check variables can select a PSGI application and set URI path.
+test_4_function() {
+    test_response '/path' 200 '<title>Web::Paste::Simple' && \
+    test_response '/cpanfile' 200 'requires'
+}
+do_test 'psgi-variables' 'test_4_function' 'PSGI_FILE=./application2.psgi,PSGI_URI_PATH=/path'
+
+# Check httpd access_log flows to stdout, error_log to stdout.
+# TODO: send error_log to stderr after dropping support for broken
+# docker < 1.9.
+test_5_function() {
+    test_response '/' 200 'Text in HTTP body' && \
+    test_stdout '"GET /[^"]*" 200 ' && \
+    test_stdout 'Warning on stderr'
+}
+do_test 'warningonstderr' 'test_5_function'
 
 info "All tests finished successfully."

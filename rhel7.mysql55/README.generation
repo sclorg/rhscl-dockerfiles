@@ -1,1 +1,1 @@
-This image was pulled from https://github.com/openshift/mysql.git (subdirectory 5.5).
+This image was pulled from git://internal-url-hidden/rpms/openshift-mysql-docker (subdirectory .).

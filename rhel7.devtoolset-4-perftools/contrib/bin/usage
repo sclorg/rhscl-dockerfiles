@@ -1,0 +1,25 @@
+#!/bin/sh
+cat <<EOF
+This is a devtoolset-4-perftools base image.  It contains the dts-4
+systemtap, dyninst (+devel), elfutils (+devel), valgrind packages.
+These are usually intended to monitor the host or other containers,
+so this image should normally be launched in a privileged container.
+
+Sample invocation:
+
+   % atomic run --spc devtoolset-4-perftools-rhel7 /bin/bash
+or % docker run -ti --privileged --ipc=host --net=host --pid=host [...] \
+            devtoolset-4-perftools-rhel7 /bin/bash
+
+
+For using systemtap, also install a kernel, kernel-devel,
+plus possibly kernel-debuginfo, all matching the container
+host, within the container:
+
+   % atomic run devtoolset-4-perftools-rhel7 /bin/bash
+   # yum -y install kernel kernel-devel kernel-debuginfo
+
+and save that container to a reusable image:
+
+   % docker commit $CONTAINER devtoolset-4-perftools-rhel7-`uname -r`
+EOF

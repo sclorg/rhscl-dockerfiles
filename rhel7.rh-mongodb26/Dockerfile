@@ -1,4 +1,4 @@
-FROM rhel7
+FROM rhel:7.2-released
 # MongoDB image for OpenShift.
 #
 # Volumes:
@@ -9,7 +9,8 @@ FROM rhel7
 #  * $MONGODB_DATABASE - Name of the database to create
 #  * $MONGODB_ADMIN_PASSWORD - Password of the MongoDB Admin
 
-ENV MONGODB_VERSION=2.6
+ENV MONGODB_VERSION=2.6 \
+    HOME=/var/lib/mongodb
 
 LABEL io.k8s.description="MongoDB is a scalable, high-performance, open source NoSQL database." \
       io.k8s.display-name="MongoDB 2.6" \
@@ -20,38 +21,45 @@ LABEL io.k8s.description="MongoDB is a scalable, high-performance, open source N
 LABEL BZComponent="rh-mongodb26-docker" \
       Name="rhscl/mongodb-26-rhel7" \
       Version="2.6" \
-      Release="2" \
+      Release="8.3" \
       Architecture="x86_64"
 
 EXPOSE 27017
 
-COPY run-mongod.sh /usr/local/bin/
-COPY contrib /var/lib/mongodb/
-
-# This image must forever use UID 184 for mongodb user and GID 998 for the
-# mongodb group, so our volumes are safe in the future. This should *never*
-# change, the last test is there to make sure of that.
 # Due to the https://bugzilla.redhat.com/show_bug.cgi?id=1206151,
 # the whole /var/lib/mongodb/ dir has to be chown-ed.
 RUN yum install -y yum-utils && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum install -y --setopt=tsflags=nodocs bind-utils gettext iproute v8314 rh-mongodb26-mongodb rh-mongodb26 && \
+    INSTALL_PKGS="bind-utils gettext iproute rsync tar v8314 rh-mongodb26-mongodb rh-mongodb26" && \
+    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum clean all && \
-    mkdir -p /var/lib/mongodb/data && chown -R mongodb.mongodb /var/lib/mongodb/ && \
-    test "$(id mongodb)" = "uid=184(mongodb) gid=998(mongodb) groups=998(mongodb)" && \
-    chmod o+w -R /var/lib/mongodb && chmod o+w -R /var/opt/rh/rh-mongodb26/lib/mongodb
+    mkdir -p /var/lib/mongodb/data && chown -R mongodb.0 /var/lib/mongodb/ /var/opt/rh/rh-mongodb26/lib/mongodb && \
+    # Loosen permission bits to avoid problems running container with arbitrary UID
+    chmod g+w -R /var/opt/rh/rh-mongodb26/lib/mongodb && \
+    chmod -R g+rwx /var/lib/mongodb
+
+# Get prefix path and path to scripts rather than hard-code them in scripts
+ENV CONTAINER_SCRIPTS_PATH=/usr/share/container-scripts/mongodb \
+    MONGODB_PREFIX=/opt/rh/rh-mongodb26/root/usr \
+    ENABLED_COLLECTIONS=rh-mongodb26
 
 # When bash is started non-interactively, to run a shell script, for example it
 # looks for this variable and source the content of this file. This will enable
 # the SCL for all scripts without need to do 'scl enable'.
-ENV BASH_ENV=/var/lib/mongodb/scl_enable \
-    ENV=/var/lib/mongodb/scl_enable \
-    PROMPT_COMMAND=". /var/lib/mongodb/scl_enable"
+ENV BASH_ENV=${CONTAINER_SCRIPTS_PATH}/scl_enable \
+    ENV=${CONTAINER_SCRIPTS_PATH}/scl_enable \
+    PROMPT_COMMAND=". ${CONTAINER_SCRIPTS_PATH}/scl_enable"
+
+ADD root /
+
+# Container setup
+RUN touch /etc/mongod.conf && chown mongodb:0 /etc/mongod.conf && /usr/libexec/fix-permissions /etc/mongod.conf
 
 VOLUME ["/var/lib/mongodb/data"]
 
 USER 184
 
-ENTRYPOINT ["run-mongod.sh"]
-CMD ["mongod"]
+ENTRYPOINT ["container-entrypoint"]
+CMD ["run-mongod"]

@@ -1,4 +1,4 @@
-FROM openshift/base-rhel7
+FROM openshift3/sti-base:1.0
 
 # This image provides a Perl 5.16 environment you can use to run your Perl applications.
 EXPOSE 8080
@@ -16,13 +16,15 @@ LABEL io.k8s.description="Platform for building and running Perl 5.1.6 applicati
 LABEL BZComponent="openshift-sti-perl-docker" \
       Name="openshift3/perl-516-rhel7" \
       Version="5.16" \
-      Release="1" \
+      Release="37" \
       Architecture="x86_64"
 
 # TODO: Cleanup cpanp cache after cpanminus is installed?
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable rhel-7-server-optional-rpms && \
-    yum install -y --setopt=tsflags=nodocs httpd24 perl516 perl516-mod_perl perl516-perl-CPANPLUS && \
+    INSTALL_PKGS="httpd24 perl516 perl516-mod_perl perl516-perl-CPANPLUS" && \
+    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    rpm -V $INSTALL_PKGS && \
     yum clean all && \
     scl enable perl516 -- cpanp 's conf prereqs 1; s save system' && \
     scl enable perl516 -- cpanp 's conf allow_build_interactivity 0; s save system'
