@@ -1,7 +1,8 @@
 [outdated] rhscl-dockerfiles
 ============================
 
-:exclamation: **Notice: Outdated information**
+:exclamation: **Outdated Notice**
+
 This repository contains just very simple and often outdated
 and unmaintained Dockerfiles for various Software
 Collections, which were developed as first containers based on Software
@@ -10,7 +11,7 @@ Collections.
 The Dockerfiles were intended as examples which can be used to build
 more complex containers.
 
-However, over the time some more mature containers were developed and are now maintained in separate repositories under https://github.com/sclorg. Please, find particular repository there.
+However, over the time some more mature containers were developed and are now maintained in separate repositories under https://github.com/sclorg. Please, find particular repository there instead.
 
 For those who decided to build a Dockerfile anyway, a Red Hat Enterprise Linux host system is
 required, with suitable entitlements enabled.  For more information on
