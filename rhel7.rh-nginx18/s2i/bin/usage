@@ -8,7 +8,7 @@ To use it, install S2I: https://github.com/openshift/source-to-image
 
 Sample invocation:
 
-s2i build https://github.com/openshift/sti-perl.git --context-dir=5.16/test/sample-test-app/ openshift/perl-516-${DISTRO}7 perl-sample-app
+s2i build . --context-dir=. rhscl/nginx-18-rhel7 your-image-name
 
 You can then run the resulting image via:
 docker run -p 8080:8080 perl-sample-app

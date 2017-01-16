@@ -3,7 +3,7 @@
 set -e
 
 echo "---> Installing application source"
-cp -Rf /tmp/src/. ./
+cp -Rf ./src ./
 
 if [ -d ./nginx-cfg ]; then
   echo "---> Copying nginx configuration files..."
