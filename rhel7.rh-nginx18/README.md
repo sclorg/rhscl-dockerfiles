@@ -1,13 +1,27 @@
 Nginx 1.8 server and a reverse proxy server docker image
 ========================================================
 
-The `centos/rh-nginx-18-centos7` image provides an nginx 1.8 server and a reverse proxy server. The image can be used as a base image for other applications based on nginx 1.8 web server.
+The `rhscl/nginx-18-rhel7` image provides an nginx 1.8 server and a reverse proxy server. The image can be used as a base image for other applications based on nginx 1.8 web server.
 
 
-To pull the `centos/rh-nginx-18-centos7` image, run the following command as root:
+To pull the `rhscl/nginx-18-rhel7` image, run the following command as root:
 ```
-docker pull centos/rh-nginx-18-centos7
+docker pull rhscl/nginx-18-rhel7
 ```
+
+S2I build support
+-------------
+Nginx configuration can be extended using S2I tool.
+S2I build folder structure:
+
+|    Folder name         |    Description                            |
+| :--------------------- | ----------------------------------------- |
+|  ./nginx-cfg/*.conf    | Should contain all nginx configuration we want to include into image |
+|  ./src/                | Should contain nginx application source code |
+
+Execution:
+
+        s2i build --context-dir=. rhscl/nginx-18-rhel7 your-image-name
 
 
 Configuration
