@@ -194,7 +194,7 @@ function mongo_create_admin() {
 
   # Set admin password
   local js_command="db.createUser({user: 'admin', pwd: '${MONGODB_ADMIN_PASSWORD}', roles: ['dbAdminAnyDatabase', 'userAdminAnyDatabase' , 'readWriteAnyDatabase','clusterAdmin' ]});"
-  if ! mongo admin ${1:-} --host ${2:-"localhost"} --eval "${js_command}"; then
+  if ! mongo admin ${1:-} --host ${2:-"localhost"} --port "${CONTAINER_PORT}" --eval "${js_command}"; then
     echo "=> Failed to create MongoDB admin user."
     exit 1
   fi
